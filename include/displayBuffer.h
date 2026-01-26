@@ -2,15 +2,15 @@
 #include <Arduino.h>
 struct DisplayBuffer {
     //storage casu
-    uint8_t Seconds, Minutes, Hours;
+    uint8_t digits[6]; //HH:MM:SS
 
     void Push(){
-        displayedSecondsUnits = Seconds % 10;
-        displayedSecondsTens = Seconds / 10;
-        displayedMinutesUnits = Minutes % 10;
-        displayedMinutesTens = Minutes / 10;
-        displayedHoursUnits = Hours % 10;
-        displayedHoursTens = Hours / 10;
+        displayedHoursTens = digits[0];
+        displayedHoursUnits = digits[1];
+        displayedMinutesTens = digits[2];
+        displayedMinutesUnits = digits[3];
+        displayedSecondsTens = digits[4];
+        displayedSecondsUnits = digits[5];
     }
 
     //rychle "pole" pro ISR
