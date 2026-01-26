@@ -10,19 +10,14 @@
 Display display;
 
 void Display::stepAnimation(){
-    switch (this->currentAnimState)
-    {
-    case STATIC:
-        //if seconds value changed, slot machine changed positions (seconds units slotting may be disabled in settings)
-        //if minutes or hours change, slot every position except seconds XX:XX:--
-        break;
+    switch (this->currentAnimState) {
     case FLY_IN:
         switch(animStep){
-            case 0://push empty chars into displayBuffer
+            case 0://nasypat prazdne characters do bufferu displeje
                 for(uint8_t i = 0; i < 6; i++){
-                    displayBuffer.digits[i] = 0xF; //empty char
+                    displayBuffer.digits[i] = 0xF; //0xF = 0b1111 = zadny vystup aktivni (viz datasheet MH74141)
                 }
-                //enable HV power supply
+                //zapnut HV (jinak uvidime prdlajs)
                 animStep++;
                 this->animRunning = true;
             break;
@@ -72,17 +67,15 @@ void Display::stepAnimation(){
     case FLY_OUT:
         switch(animStep){
             case 0:
-                displayBuffer.digits[0] = this->digits[0];
-                displayBuffer.digits[1] = this->digits[1];
-                displayBuffer.digits[2] = this->digits[2];
-                displayBuffer.digits[3] = this->digits[3];
-                displayBuffer.digits[4] = this->digits[4];
-                displayBuffer.digits[5] = this->digits[5];
+                for(uint8_t i = 0; i < 6; i++){
+                    //pro jistotu
+                    displayBuffer.digits[i] = this->digits[i];
+                }
                 animStep++;
                 this->animRunning = true;
             break;
             case 1://actual time 12:34:56 - display -1:23:45
-                displayBuffer.digits[0] = 0xF;
+                displayBuffer.digits[0] = 0xF; //postupne mazat posledni cislici a posouvat udaj vpravo
                 displayBuffer.digits[1] = this->digits[0];
                 displayBuffer.digits[2] = this->digits[1];
                 displayBuffer.digits[3] = this->digits[2];
@@ -119,15 +112,34 @@ void Display::stepAnimation(){
             case 6: //actual time 12:34:56 - display  --:--:--
                 displayBuffer.digits[5] = 0xF;
                 animStep=0;
-                //disable HV power supply
-                this->currentAnimState = OFF;
+                //vypni HV (setrime energii)
+                this->currentAnimState = STATIC;
                 this->animRunning = false;
             break;
         }
         break;
     default:
+        //nerob nic
         break;
     }
     displayBuffer.Push();
 }
 
+void Display::rotateSeconds(){
+    //jednotky sekund jsou [5]
+    int8_t bufferSecs = displayBuffer.digits[5]; //musi byt signed (chceme aby 0 -> -1 -> 9)
+    if(this->digits[5] != bufferSecs){ //pokud actual jednotky sekund nesedi s bufferem
+        bufferSecs--;
+        if(bufferSecs < 0) bufferSecs = 9;
+        displayBuffer.digits[5] = bufferSecs; //vratit hodnotu do realneho bufferu
+    }
+    
+    bufferSecs = displayBuffer.digits[4]; //vypujcime si hodnotu desitek sekund
+    if(this->digits[4] != bufferSecs){ //pokud actual desitky sekund nesedi s bufferem
+        bufferSecs--;
+        if(bufferSecs < 0) bufferSecs = 9;
+        displayBuffer.digits[4] = bufferSecs; //vratit hodnotu do realneho bufferu
+    } 
+
+    displayBuffer.Push();//nasypat z bufferu na realne vystupy
+}

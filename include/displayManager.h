@@ -2,13 +2,21 @@
 #include <Arduino.h>
 struct Display {
     private:
-        enum animType {STATIC, FLY_IN, FLY_OUT, OFF};
+        // promenne pro animace
+        enum animType {STATIC, FLY_IN, FLY_OUT};
         animType currentAnimState = STATIC;
         bool animRunning;
         uint8_t animStep = 0;
 
+        // promenne pro tocky
+        bool slottingActive = true;
         bool secondsChanged, hrsMinsChanged;
+
+        //helper funkce
+        
     public:
+        void rotateSeconds();
+        
         bool isAnimRunning(){return this->animRunning;}
         bool slotSecondsUnits = true;
         void stepAnimation();
@@ -20,7 +28,10 @@ struct Display {
             this->digits[3] = minutes % 10;
             this->digits[4] = seconds / 10;
             this->digits[5] = seconds % 10;
-        }   
+        }
+        uint8_t getSeconds() {return (this->digits[4] * 10 + this->digits[5]);}
+        uint8_t getMinutes() {return (this->digits[2] * 10 + this->digits[3]);}
+        uint8_t getHours() {return (this->digits[0] * 10 + this->digits[1]);}   
 };
 
 extern Display display;

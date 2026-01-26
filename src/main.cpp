@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <displayBuffer.h>
-#include <rtc.h>
+#include <displayManager.h>
 
 #define PIN_MH141_A1 1
 #define PIN_MH141_B1 2
@@ -21,7 +21,7 @@ DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
-  Serial.begin(9600); //inicializuj seriovou linku s rychlosti 9600baud
+  Serial.begin(115200); //inicializuj seriovou linku s rychlosti 115200baud
 
   //nastaveni modu GPIO
   pinMode(PIN_MH141_A1, OUTPUT);
@@ -57,23 +57,29 @@ void setup() {
   interrupts(); //zapnout zpet vsechny interrupty
 }
 
-uint64_t lastMillis;
+uint64_t lastMillis, lastMillis2;
 void loop(){
-  if(millis() - lastMillis >= 100){
+  if(millis() - lastMillis >= 75){
+    //kazdych 100ms
+    display.rotateSeconds();
+    Serial.print("actual: ");
+    Serial.print(display.getSeconds());
+    Serial.print(" | in buffer: ");
+    Serial.println(displayBuffer.digits[4] * 10 + displayBuffer.digits[5]);
     lastMillis = millis();
-    displayBuffer.Seconds++;
-    if(displayBuffer.Seconds >= 60){
-      displayBuffer.Seconds = 0;
-      displayBuffer.Minutes++;
-      if(displayBuffer.Minutes >= 60){
-        displayBuffer.Minutes = 0;
-        displayBuffer.Hours++;
-        if(displayBuffer.Hours >= 24){
-          displayBuffer.Hours = 0;
-        }
+  }
+
+  if(millis() - lastMillis2 >= 1000){
+    //kazdych 100ms
+    display.digits[5]++;
+    if(display.digits[5] >= 10){
+      display.digits[4]++;
+      display.digits[5]=0;
+      if(display.digits[4] >= 10){
+        display.digits[4]=0;
       }
     }
-    displayBuffer.Push();
+    lastMillis2 = millis();
   }
 }
 
