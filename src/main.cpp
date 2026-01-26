@@ -17,7 +17,7 @@
 #define PIN_RADAR 9
 #define PIN_TOUCH 10
 
-DisplayBuffer displayBuffer;
+DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
@@ -57,8 +57,24 @@ void setup() {
   interrupts(); //zapnout zpet vsechny interrupty
 }
 
+uint64_t lastMillis;
 void loop(){
-
+  if(millis() - lastMillis >= 100){
+    lastMillis = millis();
+    displayBuffer.Seconds++;
+    if(displayBuffer.Seconds >= 60){
+      displayBuffer.Seconds = 0;
+      displayBuffer.Minutes++;
+      if(displayBuffer.Minutes >= 60){
+        displayBuffer.Minutes = 0;
+        displayBuffer.Hours++;
+        if(displayBuffer.Hours >= 24){
+          displayBuffer.Hours = 0;
+        }
+      }
+    }
+    displayBuffer.Push();
+  }
 }
 
 
