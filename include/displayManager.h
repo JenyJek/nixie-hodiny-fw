@@ -15,10 +15,10 @@ struct Display {
         //helper funkce
         
     public:
-        void rotateSeconds();
-        
+        void rotateSeconds(), rotateMinutesHours();
+
         bool isAnimRunning(){return this->animRunning;}
-        bool slotSecondsUnits = true;
+        bool slotSecondsUnits = false;
         void stepAnimation();
         uint8_t digits[6];
         void fillDigits(uint8_t hours, uint8_t minutes, uint8_t seconds){

@@ -129,17 +129,53 @@ void Display::rotateSeconds(){
     //jednotky sekund jsou [5]
     int8_t bufferSecs = displayBuffer.digits[5]; //musi byt signed (chceme aby 0 -> -1 -> 9)
     if(this->digits[5] != bufferSecs){ //pokud actual jednotky sekund nesedi s bufferem
-        bufferSecs--;
-        if(bufferSecs < 0) bufferSecs = 9;
-        displayBuffer.digits[5] = bufferSecs; //vratit hodnotu do realneho bufferu
+        if(!slotSecondsUnits){ //pokud nechceme tocit s jednotkama sekund
+            displayBuffer.digits[5] = this->digits[5]; //tak je proste nasolime rovnou a muzeme se dloubat v nose
+        }
+        else{
+            bufferSecs--;
+            if(bufferSecs < 0) bufferSecs = 9;
+            displayBuffer.digits[5] = bufferSecs; //vratit hodnotu do realneho bufferu
+        }
     }
-    
+    //desitky sekund jsou [4]
     bufferSecs = displayBuffer.digits[4]; //vypujcime si hodnotu desitek sekund
     if(this->digits[4] != bufferSecs){ //pokud actual desitky sekund nesedi s bufferem
         bufferSecs--;
         if(bufferSecs < 0) bufferSecs = 9;
         displayBuffer.digits[4] = bufferSecs; //vratit hodnotu do realneho bufferu
     } 
+    displayBuffer.Push();//nasypat z bufferu na realne vystupy
+}
 
+void Display::rotateMinutesHours(){
+    //jednotky minut jsou [3]
+    int8_t buffer = displayBuffer.digits[3]; //vypujcime si hodnotu jednotek minut
+    if(this->digits[3] != buffer){ //pokud actual jednotky minut nesedi s bufferem
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.digits[3] = buffer; //vratit hodnotu do realneho bufferu
+    }
+    //desitky minut jsou [2]
+    buffer = displayBuffer.digits[2]; //vypujcime si hodnotu desitek minut
+    if(this->digits[2] != buffer){ //pokud actual desitky minut nesedi s bufferem
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.digits[2] = buffer; //vratit hodnotu do realneho bufferu
+    }
+    //jednotky hodin jsou [1]
+    buffer = displayBuffer.digits[1]; //vypujcime si hodnotu jednotek hodin
+    if(this->digits[1] != buffer){ //pokud actual jednotky hodin nesedi s bufferem
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.digits[1] = buffer; //vratit hodnotu do realneho bufferu
+    }
+    //desitky hodin jsou [0]
+    buffer = displayBuffer.digits[0]; //vypujcime si hodnotu desitek hodin
+    if(this->digits[0] != buffer){ //pokud actual desitky hodin nesedi s bufferem
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.digits[0] = buffer; //vratit hodnotu do realneho bufferu
+    }
     displayBuffer.Push();//nasypat z bufferu na realne vystupy
 }
