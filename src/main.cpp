@@ -57,11 +57,12 @@ void setup() {
   interrupts(); //zapnout zpet vsechny interrupty
 }
 
-uint64_t lastMillis, lastMillis2;
+uint64_t lastMillis, lastMillis2, lastMillis3;
+bool on;
 void loop(){
-  if(millis() - lastMillis >= 75){
+  display.OnUpdate(); //zavolat update displeje
+  if(millis() - lastMillis >= 100){
     //kazdych 100ms
-    display.rotateSeconds();
     Serial.print("actual: ");
     Serial.print(display.getSeconds());
     Serial.print(" | in buffer: ");
@@ -75,11 +76,34 @@ void loop(){
     if(display.digits[5] >= 10){
       display.digits[4]++;
       display.digits[5]=0;
-      if(display.digits[4] >= 10){
+      if(display.digits[4] >= 6){
         display.digits[4]=0;
+        display.digits[3]++;
+        if(display.digits[3] >= 6){
+          display.digits[3]=0;
+          display.digits[1]++;
+          if(display.digits[0]>=2 && display.digits[1]>=4){
+            display.digits[0]=0;
+            display.digits[1]=0;
+          }
+        }
       }
     }
     lastMillis2 = millis();
+  }
+
+  if(millis() - lastMillis3 >= 20000){
+    //kazdych 100ms
+    if(on){
+      display.TurnOff();
+      on = false;
+    }
+    else{
+      display.TurnOn();
+      on = true;
+    }
+
+    lastMillis3 = millis();
   }
 }
 

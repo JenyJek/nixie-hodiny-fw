@@ -19,7 +19,6 @@ void Display::stepAnimation(){
                 }
                 //zapnut HV (jinak uvidime prdlajs)
                 animStep++;
-                this->animRunning = true;
             break;
             case 1: //actual time 12:34:56 - display  6-:--:--
                 displayBuffer.digits[0] = this->digits[5];
@@ -59,7 +58,6 @@ void Display::stepAnimation(){
                 displayBuffer.digits[4] = this->digits[4];
                 displayBuffer.digits[5] = this->digits[5];
                 this->currentAnimState = STATIC;
-                this->animRunning = false;
                 animStep = 0;
             break;
         }
@@ -72,7 +70,6 @@ void Display::stepAnimation(){
                     displayBuffer.digits[i] = this->digits[i];
                 }
                 animStep++;
-                this->animRunning = true;
             break;
             case 1://actual time 12:34:56 - display -1:23:45
                 displayBuffer.digits[0] = 0xF; //postupne mazat posledni cislici a posouvat udaj vpravo
@@ -114,7 +111,6 @@ void Display::stepAnimation(){
                 animStep=0;
                 //vypni HV (setrime energii)
                 this->currentAnimState = STATIC;
-                this->animRunning = false;
             break;
         }
         break;
@@ -178,4 +174,23 @@ void Display::rotateMinutesHours(){
         displayBuffer.digits[0] = buffer; //vratit hodnotu do realneho bufferu
     }
     displayBuffer.Push();//nasypat z bufferu na realne vystupy
+}
+
+uint64_t lastAnimationMillis, lastRotateSecondsMillis, lastRotateMinutesHoursMillis;
+void Display::OnUpdate(){
+    uint64_t currentMillis = millis(); 
+    if(this->currentAnimState == STATIC){ //pokud nebezi animace, muzeme smele tocit cislicema
+        if(currentMillis - lastRotateSecondsMillis >= this->rotateSecondsInterval){
+            this->rotateSeconds();
+            lastRotateSecondsMillis = currentMillis;
+        }
+        if(currentMillis - lastRotateMinutesHoursMillis >= this->rotateMinutesHoursInterval){
+            this->rotateMinutesHours();
+            lastRotateMinutesHoursMillis = currentMillis;
+        }
+    }
+    else if(currentMillis - lastAnimationMillis >= this->animUpdateInterval){
+        this->stepAnimation();
+        lastAnimationMillis = currentMillis;
+    }
 }
