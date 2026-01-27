@@ -1,6 +1,8 @@
 /*
 * the display manager handles animations, cathode anti-poisoning and HV enabling/disabling
 *
+*
+*   TODO zapinani HV
 */
 
 #include <Arduino.h>

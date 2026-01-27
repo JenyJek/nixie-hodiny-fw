@@ -121,10 +121,10 @@ ISR(TIMER2_COMPA_vect) {
     case 0:
       mux_phase=1;
       //zobrazujeme na MH74141 A - desiky hodin
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursTens & 0x02);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursTens & 0x04);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursTens & 0x08);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursTens & 0x01);
+      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursTens & 0x01);
+      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursTens & 0x02);
+      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursTens & 0x04);
+      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursTens & 0x08);
       //zobrazujeme na MH74141 B - jednotky minut
       digitalWrite(PIN_MH141_A2, displayBuffer.displayedMinutesUnits & 0x01);
       digitalWrite(PIN_MH141_B2, displayBuffer.displayedMinutesUnits & 0x02);
@@ -136,32 +136,32 @@ ISR(TIMER2_COMPA_vect) {
     case 1: //faze 1, zobrazujeme jednotky a desitky hodin
       mux_phase=2;
       //zobrazujeme na MH74141 A - jednotky hodin
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursUnits & 0x02);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursUnits & 0x04);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursUnits & 0x08);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursUnits & 0x01);
+      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursUnits & 0x01);
+      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursUnits & 0x02);
+      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursUnits & 0x04);
+      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursUnits & 0x08);
       //zobrazujeme na MH74141 B - jednotky sekund
-      digitalWrite(PIN_MH141_B2, displayBuffer.displayedSecondsUnits & 0x02);
-      digitalWrite(PIN_MH141_C2, displayBuffer.displayedSecondsUnits & 0x04);
-      digitalWrite(PIN_MH141_D2, displayBuffer.displayedSecondsUnits & 0x08);
-      digitalWrite(PIN_MH141_A2, displayBuffer.displayedSecondsUnits & 0x01);
+      digitalWrite(PIN_MH141_B2, displayBuffer.displayedSecondsUnits & 0x01);
+      digitalWrite(PIN_MH141_C2, displayBuffer.displayedSecondsUnits & 0x02);
+      digitalWrite(PIN_MH141_D2, displayBuffer.displayedSecondsUnits & 0x04);
+      digitalWrite(PIN_MH141_A2, displayBuffer.displayedSecondsUnits & 0x08);
       //zapnout anody 
       digitalWrite(PIN_DIG_2, HIGH);
     break;
     case 2: //faze 2, zobrazujeme jednotky a desitky minut
       mux_phase=0;
       //zobrazujeme na MH74141 A - desiky minut
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedMinutesTens & 0x02);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedMinutesTens & 0x04);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedMinutesTens & 0x08);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedMinutesTens & 0x01);
+      digitalWrite(PIN_MH141_B1, displayBuffer.displayedMinutesTens & 0x01);
+      digitalWrite(PIN_MH141_C1, displayBuffer.displayedMinutesTens & 0x02);
+      digitalWrite(PIN_MH141_D1, displayBuffer.displayedMinutesTens & 0x04);
+      digitalWrite(PIN_MH141_A1, displayBuffer.displayedMinutesTens & 0x08);
       //zobrazujeme na MH74141 B - desitky sekund
       digitalWrite(PIN_MH141_A2, displayBuffer.displayedSecondsTens & 0x01);
       digitalWrite(PIN_MH141_B2, displayBuffer.displayedSecondsTens & 0x02);
       digitalWrite(PIN_MH141_C2, displayBuffer.displayedSecondsTens & 0x04);
       digitalWrite(PIN_MH141_D2, displayBuffer.displayedSecondsTens & 0x08);
       //zapnout anody 
-      digitalWrite(PIN_DIG_1, HIGH);
+      digitalWrite(PIN_DIG_3, HIGH);
     break;
     default:
       mux_phase = 0;

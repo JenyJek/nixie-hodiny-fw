@@ -1,7 +1,7 @@
 #include <rtc.h>
 #include <Wire.h>
 
-//constructor
+//konstruktor (zbytocne ale proc ne)
 rtc::rtc (uint8_t address){
     this->address = address;
     Wire.begin();
@@ -9,8 +9,8 @@ rtc::rtc (uint8_t address){
 
 void rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.beginTransmission(this->address);
-    Wire.write(0x00);//set starting pointer to 0x00
-    Wire.write(decToBcd(secs));//seconds in bcd format, msb first, 0xtens, 0xunits
+    Wire.write(0x00);//nastav zacatecni offset na 0x00
+    Wire.write(decToBcd(secs));//sekundy v BCD formatu, msb prvni, 0xtens, 0xunits
     Wire.write(decToBcd(mins));
     Wire.write(decToBcd(hrs));
     Wire.endTransmission();
@@ -18,18 +18,18 @@ void rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
 
 void rtc::setAlm(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.beginTransmission(this->address);
-    Wire.write(0x07);//set starting pointer to 0x07
-    Wire.write(decToBcd(secs));//seconds in bcd format, msb first, 0xtens, 0xunits
+    Wire.write(0x07);//nastav zacatecni offset na 0x07
+    Wire.write(decToBcd(secs));//sekundy v BCD formatu, msb prvni, 0xtens, 0xunits
     Wire.write(decToBcd(mins));
     Wire.write(decToBcd(hrs));
-    Wire.write(0x80); //need to enable A1M4 (msb) - trigger ALMIRQ when secs, mins hours match
+    Wire.write(0x80); //potreba nastavit 1 na A1M4 (msb) - trigger ALMIRQ na match sekund, minut, hodin
     Wire.endTransmission();
 }
 
 void rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
     Wire.beginTransmission(this->address);
-    Wire.write(0x03);//set starting pointer to 0x03
-    Wire.write(decToBcd(dow));//seconds in bcd format, msb first, 0xtens, 0xunits
+    Wire.write(0x03);//nastav zacatecni offset na 0x03
+    Wire.write(decToBcd(dow));//sekundy v BCD formatu, msb prvni, 0xtens, 0xunits
     Wire.write(decToBcd(day));
     Wire.write(decToBcd(month));
     Wire.write(decToBcd(year));

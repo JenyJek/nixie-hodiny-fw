@@ -10,7 +10,7 @@ class rtc
     public:
     signed char intTemperature, intTemperatureDecimal;
     uint8_t minutes, hours, seconds, day, month, year;
-    enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT}; //NAD: not a day, rtc works by 1-7, not 0-6.
+    enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT}; //NAD: not a day, rtc funguje na 1-7, ne 0-6.
     dayOfWeek dow;
 
     rtc(uint8_t address);
