@@ -8,6 +8,7 @@
 #include <Arduino.h>
 #include <displayBuffer.h>
 #include <displayManager.h>
+#include <pins.h>
 
 Display display;
 
@@ -20,6 +21,7 @@ void Display::stepAnimation(){
                     displayBuffer.digits[i] = 0xF; //0xF = 0b1111 = zadny vystup aktivni (viz datasheet MH74141)
                 }
                 //zapnut HV (jinak uvidime prdlajs)
+                digitalWrite(PIN_HV_MOS, HIGH);
                 animStep++;
             break;
             case 1: //actual time 12:34:56 - display  6-:--:--
@@ -112,7 +114,8 @@ void Display::stepAnimation(){
                 displayBuffer.digits[5] = 0xF;
                 animStep=0;
                 //vypni HV (setrime energii)
-                this->currentAnimState = STATIC;
+                digitalWrite(PIN_HV_MOS, LOW);
+                this->currentAnimState = OFF;
             break;
         }
         break;
@@ -147,8 +150,14 @@ void Display::rotateSeconds(){
 }
 
 void Display::rotateMinutesHours(){
+    bool forceChange = displayBuffer.forceChange;
     //jednotky minut jsou [3]
     int8_t buffer = displayBuffer.digits[3]; //vypujcime si hodnotu jednotek minut
+    if(forceChange){ //force zmena hodnoty
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
+    }
     if(this->digits[3] != buffer){ //pokud actual jednotky minut nesedi s bufferem
         buffer--;
         if(buffer < 0) buffer = 9;
@@ -156,6 +165,11 @@ void Display::rotateMinutesHours(){
     }
     //desitky minut jsou [2]
     buffer = displayBuffer.digits[2]; //vypujcime si hodnotu desitek minut
+    if(forceChange){ //force zmena hodnoty
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
+    }
     if(this->digits[2] != buffer){ //pokud actual desitky minut nesedi s bufferem
         buffer--;
         if(buffer < 0) buffer = 9;
@@ -163,6 +177,11 @@ void Display::rotateMinutesHours(){
     }
     //jednotky hodin jsou [1]
     buffer = displayBuffer.digits[1]; //vypujcime si hodnotu jednotek hodin
+    if(forceChange){ //force zmena hodnoty
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
+    }
     if(this->digits[1] != buffer){ //pokud actual jednotky hodin nesedi s bufferem
         buffer--;
         if(buffer < 0) buffer = 9;
@@ -170,6 +189,11 @@ void Display::rotateMinutesHours(){
     }
     //desitky hodin jsou [0]
     buffer = displayBuffer.digits[0]; //vypujcime si hodnotu desitek hodin
+    if(forceChange){ //force zmena hodnoty
+        buffer--;
+        if(buffer < 0) buffer = 9;
+        displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
+    }
     if(this->digits[0] != buffer){ //pokud actual desitky hodin nesedi s bufferem
         buffer--;
         if(buffer < 0) buffer = 9;

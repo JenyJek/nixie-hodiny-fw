@@ -1,21 +1,7 @@
 #include <Arduino.h>
 #include <displayBuffer.h>
 #include <displayManager.h>
-
-#define PIN_MH141_A1 1
-#define PIN_MH141_B1 2
-#define PIN_MH141_C1 3
-#define PIN_MH141_D1 4
-#define PIN_MH141_A2 1
-#define PIN_MH141_B2 2
-#define PIN_MH141_C2 3
-#define PIN_MH141_D2 4
-#define PIN_DIG_1 5
-#define PIN_DIG_2 6
-#define PIN_DIG_3 7
-#define PIN_HV_MOS 8
-#define PIN_RADAR 9
-#define PIN_TOUCH 10
+#include <pins.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 
@@ -55,28 +41,53 @@ void setup() {
   TIMSK2 |= (1 << OCIE2A);  // zapnout funkci timer compare
 
   interrupts(); //zapnout zpet vsechny interrupty
+
+  display.digits[0] = 1;
+  display.digits[1] = 2;
+  display.digits[2] = 3;
+  display.digits[3] = 4;
+  display.digits[4] = 5;
+  display.digits[5] = 6;
+
+  display.OnUpdate();
+  
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
 bool on;
 void loop(){
   display.OnUpdate(); //zavolat update displeje
+  
   if(millis() - lastMillis >= 100){
     //kazdych 100ms
     Serial.print("actual: ");
+    Serial.print(display.getHours());
+    Serial.print(":");
+    Serial.print(display.getMinutes());
+    Serial.print(":");
     Serial.print(display.getSeconds());
     Serial.print(" | in buffer: ");
-    Serial.println(displayBuffer.digits[4] * 10 + displayBuffer.digits[5]);
+    Serial.print(displayBuffer.digits[0] == 0xF ?  '-' : char(displayBuffer.digits[0] + 48));
+    Serial.print(displayBuffer.digits[1] == 0xF ?  '-' : char(displayBuffer.digits[1] + 48));
+    Serial.print(":");
+    Serial.print(displayBuffer.digits[2] == 0xF ?  '-' : char(displayBuffer.digits[2] + 48));
+    Serial.print(displayBuffer.digits[3] == 0xF ?  '-' : char(displayBuffer.digits[3] + 48));
+    Serial.print(":");
+    Serial.print(displayBuffer.digits[4] == 0xF ?  '-' : char(displayBuffer.digits[4] + 48));
+    Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5  ] + 48));
     lastMillis = millis();
   }
 
   if(millis() - lastMillis2 >= 1000){
     //kazdych 100ms
+
+    //force update cyklovani hodiny:minuty bude pres alarm2 na rtc potom (kazdou minutu trigger flag)
     display.digits[5]++;
     if(display.digits[5] >= 10){
       display.digits[4]++;
       display.digits[5]=0;
       if(display.digits[4] >= 6){
+        displayBuffer.forceChange = true;
         display.digits[4]=0;
         display.digits[3]++;
         if(display.digits[3] >= 6){
@@ -93,7 +104,7 @@ void loop(){
   }
 
   if(millis() - lastMillis3 >= 20000){
-    //kazdych 100ms
+    //kazdych 20s
     if(on){
       display.TurnOff();
       on = false;

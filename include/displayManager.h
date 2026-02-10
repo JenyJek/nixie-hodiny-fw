@@ -3,7 +3,7 @@
 struct Display {
     private:
         // promenne pro animace
-        enum animType {STATIC, FLY_IN, FLY_OUT};
+        enum animType {STATIC, FLY_IN, FLY_OUT, OFF};
         animType currentAnimState = STATIC;
         uint8_t animStep = 0;
 

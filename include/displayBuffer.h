@@ -3,6 +3,7 @@
 struct DisplayBuffer {
     //storage casu
     uint8_t digits[6]; //HH:MM:SS
+    bool forceChange = false;
 
     //tadyten push je tu jenom kvuli tomu aby se setril cas zpracovani
     void Push(){
