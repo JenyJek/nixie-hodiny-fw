@@ -202,7 +202,7 @@ void Display::rotateMinutesHours(){
     displayBuffer.Push();//nasypat z bufferu na realne vystupy
 }
 
-uint64_t lastAnimationMillis, lastRotateSecondsMillis, lastRotateMinutesHoursMillis;
+uint64_t lastAnimationMillis, lastRotateSecondsMillis, lastRotateMinutesHoursMillis, lastDoubleDotOnMillis;
 void Display::OnUpdate(){
     uint64_t currentMillis = millis(); 
     if(this->currentAnimState == STATIC){ //pokud nebezi animace, muzeme smele tocit cislicema
@@ -218,5 +218,13 @@ void Display::OnUpdate(){
     else if(currentMillis - lastAnimationMillis >= this->animUpdateInterval){
         this->stepAnimation();
         lastAnimationMillis = currentMillis;
+    }
+
+    if(this->currentMode == TIME || this->currentMode == ALARM_RUN){
+        if(currentMillis - lastDoubleDotOnMillis >= this->doubleDotOnTime){
+            this->SetDots(NONE);
+        }
+    }else if(this->currentMode == NONE){
+        lastDoubleDotOnMillis = currentMillis;
     }
 }

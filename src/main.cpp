@@ -69,10 +69,10 @@ void loop(){
     Serial.print(" | in buffer: ");
     Serial.print(displayBuffer.digits[0] == 0xF ?  '-' : char(displayBuffer.digits[0] + 48));
     Serial.print(displayBuffer.digits[1] == 0xF ?  '-' : char(displayBuffer.digits[1] + 48));
-    Serial.print(":");
+    Serial.print(displayBuffer.upperDots ? (displayBuffer.lowerLeftDot ? ":" : "-") : (displayBuffer.lowerLeftDot ? "." : " "));
     Serial.print(displayBuffer.digits[2] == 0xF ?  '-' : char(displayBuffer.digits[2] + 48));
     Serial.print(displayBuffer.digits[3] == 0xF ?  '-' : char(displayBuffer.digits[3] + 48));
-    Serial.print(":");
+    Serial.print(displayBuffer.upperDots ? (displayBuffer.lowerRightDot ? ":" : "-") : (displayBuffer.lowerRightDot ? "." : " "));
     Serial.print(displayBuffer.digits[4] == 0xF ?  '-' : char(displayBuffer.digits[4] + 48));
     Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5  ] + 48));
     lastMillis = millis();
@@ -81,8 +81,9 @@ void loop(){
   if(millis() - lastMillis2 >= 1000){
     //kazdych 100ms
 
-    //force update cyklovani hodiny:minuty bude pres alarm2 na rtc potom (kazdou minutu trigger flag)
+    //force update cyklovani hodiny:minuty bude pres pocitani 60ti isr alarmu2 na rtc potom (kazdou sekundu trigger flag)
     display.digits[5]++;
+    display.SetDots(display.TIME);
     if(display.digits[5] >= 10){
       display.digits[4]++;
       display.digits[5]=0;
@@ -131,6 +132,8 @@ ISR(TIMER2_COMPA_vect) {
   switch (mux_phase){
     case 0:
       mux_phase=1;
+      //zobrazeni tecek #1 - leva spodni tecka
+      digitalWrite(PIN_DOT, displayBuffer.lowerLeftDot);
       //zobrazujeme na MH74141 A - desiky hodin
       digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursTens & 0x01);
       digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursTens & 0x02);
@@ -146,6 +149,8 @@ ISR(TIMER2_COMPA_vect) {
     break;
     case 1: //faze 1, zobrazujeme jednotky a desitky hodin
       mux_phase=2;
+      //zobrazeni tecek #2 - prava spodni tecka
+      digitalWrite(PIN_DOT, displayBuffer.lowerRightDot);
       //zobrazujeme na MH74141 A - jednotky hodin
       digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursUnits & 0x01);
       digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursUnits & 0x02);
@@ -161,6 +166,8 @@ ISR(TIMER2_COMPA_vect) {
     break;
     case 2: //faze 2, zobrazujeme jednotky a desitky minut
       mux_phase=0;
+      //zobrazeni tecek #3 - obe horni tecky
+      digitalWrite(PIN_DOT, displayBuffer.upperDots);
       //zobrazujeme na MH74141 A - desiky minut
       digitalWrite(PIN_MH141_B1, displayBuffer.displayedMinutesTens & 0x01);
       digitalWrite(PIN_MH141_C1, displayBuffer.displayedMinutesTens & 0x02);

@@ -16,6 +16,35 @@ struct Display {
         uint16_t animUpdateInterval = 150; //interval volani OnUpdate v ms
         uint16_t rotateSecondsInterval = 75; //interval otaceni sekund v ms
         uint16_t rotateMinutesHoursInterval = 75; //interval otaceni minut a hodin v ms
+        uint16_t doubleDotOnTime = 250;
+        enum dotMode {NONE, TIME, DATE, ALARM_SET, ALARM_RUN};
+        dotMode currentMode;
+
+        void SetDots(dotMode mode){
+            currentMode = mode;
+            if(currentAnimState != OFF) {
+                switch (currentMode){
+                    case NONE:
+                        displayBuffer.setDots(0b0000);
+                    break;
+                    case TIME:
+                        displayBuffer.setDots(0b1110);
+                    break;
+                    case DATE:
+                        displayBuffer.setDots(0b1100);
+                    break;
+                    case ALARM_SET:
+                        displayBuffer.setDots(0b1010);
+                    break;
+                    case ALARM_RUN:
+                        displayBuffer.setDots(0b0010);
+                    break;
+                }
+            }
+            else{
+                displayBuffer.setDots(0b0000);
+            }
+        }
 
         void OnUpdate();
         void TurnOn(){

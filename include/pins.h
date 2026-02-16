@@ -11,6 +11,7 @@
 #define PIN_DIG_1 5
 #define PIN_DIG_2 6
 #define PIN_DIG_3 7
-#define PIN_HV_MOS 8
-#define PIN_RADAR 9
-#define PIN_TOUCH 10
+#define PIN_DOT 8
+#define PIN_HV_MOS 9
+#define PIN_RADAR 10
+#define PIN_TOUCH 11
