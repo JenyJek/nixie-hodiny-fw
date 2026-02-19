@@ -6,26 +6,33 @@ class rtc
     uint8_t address;
     uint8_t decToBcd(uint8_t decimal);
     uint8_t bcdToDec(uint8_t bcd);
-    /* data */
+    uint8_t getStatusRegister();
+    
     public:
-    signed char intTemperature, intTemperatureDecimal;
     uint8_t minutes, hours, seconds, day, month, year;
-    enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT}; //NAD: not a day, rtc funguje na 1-7, ne 0-6.
+    enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT};
     dayOfWeek dow;
 
     rtc(uint8_t address);
     void setTime(uint8_t secs, uint8_t mins, uint8_t hrs);
-    void setAlm(uint8_t secs, uint8_t mins, uint8_t hrs);
     void setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow);
-    void enableAlarm();
-    void disableAlarm();
+    
+    // Alarm2: user-settable, hours:minutes match
+    void setAlm(uint8_t mins, uint8_t hrs);
+    
+    // Alarm1: every second trigger
+    void initAlm1();
+    
+    // Alarm flag getters (also clear the flag when read)
+    bool getAlm1FlagTrigger();
+
+    bool getAlm2Flag();
+    void enableAlm();
+    void disableAlm();
+    void clearAlm();
+    
     void read();
-    bool alarmActive();
-    void readTemperature();
-    float getTemperature(){
-        readTemperature();
-        return intTemperature + 0.01f * intTemperatureDecimal;
-    }
+    float getTemperature();
 };
 
 
