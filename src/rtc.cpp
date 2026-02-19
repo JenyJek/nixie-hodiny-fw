@@ -35,21 +35,6 @@ void rtc::setAlm(uint8_t mins, uint8_t hrs){
     Wire.write(decToBcd(hrs));
     Wire.write(0x80); // A2M3 - 1 - trigger on minutes & hours match
     Wire.endTransmission();
-    enableAlm();
-}
-
-void rtc::enableAlm(){
-    Wire.beginTransmission(this->address);
-    Wire.write(0x0D);
-    Wire.write(0x80);
-    Wire.endTransmission();    
-}
-
-void rtc::disableAlm(){
-    Wire.beginTransmission(this->address);
-    Wire.write(0x0D);
-    Wire.write(0x00);
-    Wire.endTransmission();  
 }
 
 void rtc::clearAlm(){
