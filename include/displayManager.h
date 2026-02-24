@@ -58,12 +58,12 @@ struct Display {
 
         //gettery a settery
         void fillDigits(uint8_t hours, uint8_t minutes, uint8_t seconds){
-            this->digits[0] = hours / 10;
-            this->digits[1] = hours % 10;
-            this->digits[2] = minutes / 10;
-            this->digits[3] = minutes % 10;
-            this->digits[4] = seconds / 10;
-            this->digits[5] = seconds % 10;
+            this->digits[0] = (hours >> 4) & 0xF;
+            this->digits[1] = hours & 0xF;
+            this->digits[2] = (minutes >> 4) & 0xF;
+            this->digits[3] = minutes & 0xF;
+            this->digits[4] = (seconds >> 4) & 0xF;
+            this->digits[5] = seconds & 0xF;
         }
 
         uint8_t getSeconds() {return (this->digits[4] * 10 + this->digits[5]);}

@@ -2,13 +2,13 @@
 #include <Wire.h>
 
 //constructor
-rtc::rtc (uint8_t address){
+Rtc::Rtc (uint8_t address){
     this->address = address;
     Wire.begin();
 }
 
 //nastaveni casu v RTC
-void rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
+void Rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.beginTransmission(this->address);
     Wire.write(0x00);//set starting pointer to 0x00
     Wire.write(decToBcd(secs));//seconds in bcd format, msb first, 0xtens, 0xunits
@@ -17,7 +17,7 @@ void rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.endTransmission();
 }
 
-void rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
+void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
     Wire.beginTransmission(this->address);
     Wire.write(0x03);//set starting pointer to 0x03
     Wire.write(decToBcd(dow));//seconds in bcd format, msb first, 0xtens, 0xunits
@@ -28,7 +28,7 @@ void rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
 }
 
 //nastaveni alarmu A2 - uzivatelem nastavitelny budik
-void rtc::setAlm(uint8_t mins, uint8_t hrs){
+void Rtc::setAlm(uint8_t mins, uint8_t hrs){
     Wire.beginTransmission(this->address);
     Wire.write(0x0B);//set pointer to alarm1 registers
     Wire.write(decToBcd(mins));
@@ -37,7 +37,7 @@ void rtc::setAlm(uint8_t mins, uint8_t hrs){
     Wire.endTransmission();
 }
 
-void rtc::clearAlm(){
+void Rtc::clearAlm(){
     uint8_t statusReg = getStatusRegister();
     statusReg &= ~0x02; // smazat A2F
 
@@ -48,7 +48,7 @@ void rtc::clearAlm(){
 }
 
 //inicializace alarmu A1 - trigger kazdou vterinu
-void rtc::initAlm1(){
+void Rtc::initAlm1(){
     Wire.beginTransmission(this->address);
     Wire.write(0x07);//nastaveni offsetu
     Wire.write(0x80); //A1M1 - 1
@@ -58,7 +58,7 @@ void rtc::initAlm1(){
     Wire.endTransmission();
 }
 
-uint8_t rtc::getStatusRegister() {
+uint8_t Rtc::getStatusRegister() {
     Wire.beginTransmission(this->address);
     Wire.write(0x0F);
     Wire.endTransmission();
@@ -70,7 +70,7 @@ uint8_t rtc::getStatusRegister() {
     return 0;
 }
 
-bool rtc::getAlm1FlagTrigger() {
+bool Rtc::getAlm1FlagTrigger() {
     uint8_t statusReg = getStatusRegister();
     if ((statusReg & 0x01) != 0){
         //reset register
@@ -87,11 +87,11 @@ bool rtc::getAlm1FlagTrigger() {
     }
 }
 
-bool rtc::getAlm2Flag() {
+bool Rtc::getAlm2Flag() {
     return (getStatusRegister() & 0x02) != 0;
 }
 
-void rtc::read(){
+void Rtc::read(){
     Wire.beginTransmission(this->address);
     Wire.write(0x00);
     Wire.endTransmission();
@@ -105,7 +105,7 @@ void rtc::read(){
     this->year = Wire.read();
 }
 
-float rtc::getTemperature() {
+float Rtc::getTemperature() {
     Wire.beginTransmission(this->address);
     Wire.write(0x11);                 // MSB registr teplotniho cidla
     Wire.endTransmission();
@@ -125,10 +125,10 @@ float rtc::getTemperature() {
 }
 
 
-uint8_t rtc::decToBcd(uint8_t decimal){
+uint8_t Rtc::decToBcd(uint8_t decimal){
     return ( (decimal/10*16) + (decimal%10) );
 }
 
-uint8_t rtc::bcdToDec(uint8_t bcd){
+uint8_t Rtc::bcdToDec(uint8_t bcd){
     return ( (bcd/16*10) + (bcd%16) );
 }

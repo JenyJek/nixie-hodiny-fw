@@ -1,9 +1,11 @@
 #include <Arduino.h>
 #include <displayBuffer.h>
 #include <displayManager.h>
+#include <rtc.h>
 #include <pins.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
+Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
 
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
@@ -50,14 +52,17 @@ void setup() {
   display.digits[5] = 6;
 
   display.OnUpdate();
-  
+  rtc.initAlm1();
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
 bool on;
 void loop(){
   display.OnUpdate(); //zavolat update displeje
+  //rtc.read();
   
+  
+
   if(millis() - lastMillis >= 100){
     //kazdych 100ms
     Serial.print("actual: ");
@@ -74,31 +79,19 @@ void loop(){
     Serial.print(displayBuffer.digits[3] == 0xF ?  '-' : char(displayBuffer.digits[3] + 48));
     Serial.print(displayBuffer.upperDots ? (displayBuffer.lowerRightDot ? ":" : "-") : (displayBuffer.lowerRightDot ? "." : " "));
     Serial.print(displayBuffer.digits[4] == 0xF ?  '-' : char(displayBuffer.digits[4] + 48));
-    Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5  ] + 48));
+    Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5] + 48));
     lastMillis = millis();
   }
 
-  if(millis() - lastMillis2 >= 1000){
-    //kazdych 100ms
-
-    //force update cyklovani hodiny:minuty bude pres pocitani 60ti isr alarmu2 na rtc potom (kazdou sekundu trigger flag)
-    display.digits[5]++;
-    display.SetDots(display.TIME);
-    if(display.digits[5] >= 10){
-      display.digits[4]++;
-      display.digits[5]=0;
-      if(display.digits[4] >= 6){
+  if(millis() - lastMillis2 >= 50){
+    if(rtc.getAlm1FlagTrigger()){
+      //on alm 1 trigger flag
+      display.SetDots(display.TIME);
+      rtc.read();
+      //push from rtc to display
+      display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds);
+      if(rtc.seconds == 0){
         displayBuffer.forceChange = true;
-        display.digits[4]=0;
-        display.digits[3]++;
-        if(display.digits[3] >= 6){
-          display.digits[3]=0;
-          display.digits[1]++;
-          if(display.digits[0]>=2 && display.digits[1]>=4){
-            display.digits[0]=0;
-            display.digits[1]=0;
-          }
-        }
       }
     }
     lastMillis2 = millis();

@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-class rtc
+class Rtc
 {
     private:
     uint8_t address;
@@ -15,7 +15,7 @@ class rtc
     dayOfWeek dow;
 
     //konstruktor
-    rtc(uint8_t address);
+    Rtc(uint8_t address);
 
     //nastaveni rtc
     void setTime(uint8_t secs, uint8_t mins, uint8_t hrs);
