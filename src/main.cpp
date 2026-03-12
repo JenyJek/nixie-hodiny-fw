@@ -22,23 +22,26 @@ void setup() {
   pinMode(PIN_MH141_C2, OUTPUT);
   pinMode(PIN_MH141_D2, OUTPUT);
 
-  pinMode(PIN_DIG_3, OUTPUT);
-  pinMode(PIN_DIG_3, OUTPUT);
+  pinMode(PIN_DIG_1, OUTPUT);
+  pinMode(PIN_DIG_2, OUTPUT);
   pinMode(PIN_DIG_3, OUTPUT);
 
   pinMode(PIN_HV_MOS, OUTPUT);
   pinMode(PIN_RADAR, INPUT_PULLUP);
-
+Serial.println("nigga");
   noInterrupts(); // pri nastavovani nutno vypnout vsechny interrupty
   TCCR2A = 0; // timer/counter control register A casovace 2 - cely vynulovat
   TCCR2B = 0; // to same pro TCCR registr B
 
   TCNT2  = 0; //pocatecni hodnota timer/counter 2 nastavit na 0
-  OCR2A = 249; // nastaveni output compare registru na 500Hz pri freq. 8MHz
-  //magicka formulka = (16 * 10^6) / (8 * 500 Hz) - 1 (musi byt <0xFF)
+  // Configure Timer2 for ~200Hz (5ms) on a 16 MHz MCU using prescaler 1024:
+  // OCR = (F_CPU / (prescaler * freq)) - 1
+  // OCR = (16000000 / (1024 * 200)) - 1 ≈ 77
+  OCR2A = 77;
 
-  TCCR2B |= (1 << WGM22); // zapnout ctc mod (normalni citac)
-  TCCR2B |= (1 << CS21); // nastaveni nasobice 8 a spousteni casovace
+  TCCR2B |= (1 << WGM22); // CTC mode (OCR2A as TOP)
+  // set CS22:0 = 111 -> prescaler 1024
+  TCCR2B |= (1 << CS22) | (1 << CS21) | (1 << CS20);
 
   TIMSK2 |= (1 << OCIE2A);  // zapnout funkci timer compare
 
@@ -53,6 +56,7 @@ void setup() {
 
   display.OnUpdate();
   rtc.initAlm1();
+  Serial.println("yo startup twin");
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
