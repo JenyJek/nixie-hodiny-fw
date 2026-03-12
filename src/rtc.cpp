@@ -48,17 +48,12 @@ void Rtc::clearAlm(){
 
 //inicializace alarmu A1 - trigger kazdou vterinu
 void Rtc::initAlm1(){
-    Serial.println("Rtc::initAlm1 start");
     Wire.beginTransmission(this->address);
     Wire.write(0x07);//nastaveni offsetu
     Wire.write(0x80); //A1M1 - 1
     Wire.write(0x80); //A1M2 - 1
     Wire.write(0x80); //A1M3 - 1
     Wire.write(0x80); //A1M4 - 1
-    uint8_t stat = Wire.endTransmission();
-    Serial.print("Rtc::initAlm1 endTransmission status: ");
-    Serial.println(stat);
-    Serial.println("Rtc::initAlm1 end");
 }
 
 uint8_t Rtc::getStatusRegister() {

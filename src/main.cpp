@@ -30,29 +30,16 @@ void setup() {
   pinMode(PIN_HV_MOS, OUTPUT);
   pinMode(PIN_RADAR, INPUT_PULLUP);
 
-  Serial.println("0");
   noInterrupts(); // pri nastavovani nutno vypnout vsechny interrupty
-  Serial.println("1");
   TCCR2A = 0; // timer/counter control register A casovace 2 - cely vynulovat
-  Serial.println("2");
   TCCR2B = 0; // to same pro TCCR registr B
-  Serial.println("3");
   TCNT2  = 0; //pocatecni hodnota timer/counter 2 nastavit na 0
-  // Configure Timer2 for ~200Hz (5ms) on a 16 MHz MCU using prescaler 1024:
-  // OCR = (F_CPU / (prescaler * freq)) - 1
-  // OCR = (16000000 / (1024 * 200)) - 1 ≈ 77
-  Serial.println("4");
-  OCR2A = 77;
-  Serial.println("5");
-  TCCR2B |= (1 << WGM22); // CTC mode (OCR2A as TOP)
-  // set CS22:0 = 111 -> prescaler 1024
-  Serial.println("6");
-  TCCR2B |= (1 << CS22) | (1 << CS21) | (1 << CS20);
-  Serial.println("7");
+  OCR2A = 249; // nastaveni output compare registru na 500Hz pri freq. 8MHz
+  //magicka formulka = (16 * 10^6) / (8 * 500 Hz) - 1 (musi byt <0xFF)
+  TCCR2B |= (1 << WGM22); // zapnout ctc mod (normalni citac)
+  TCCR2B |= (1 << CS21); // nastaveni nasobice 8 a spousteni casovace
   TIMSK2 |= (1 << OCIE2A);  // zapnout funkci timer compare
-  Serial.println("8");
   interrupts(); //zapnout zpet vsechny interrupty
-  Serial.println("9");
 
   display.digits[0] = 1;
   display.digits[1] = 2;
@@ -62,10 +49,8 @@ void setup() {
   display.digits[5] = 6;
 
   display.OnUpdate();
-  Serial.println("10");
   Wire.begin();
   rtc.initAlm1();
-  Serial.println("11");
   Serial.println("startup done");
 }
 
