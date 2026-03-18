@@ -15,3 +15,4 @@
 #define PIN_HV_MOS 13
 #define PIN_RADAR 2
 #define PIN_TOUCH A3
+#define PIN_ALM_OUT 3 //predelat ve schematku

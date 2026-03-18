@@ -30,6 +30,8 @@ void setup() {
   pinMode(PIN_HV_MOS, OUTPUT);
   pinMode(PIN_RADAR, INPUT_PULLUP);
 
+  pinMode(PIN_ALM_OUT, OUTPUT);
+
   noInterrupts(); // pri nastavovani nutno vypnout vsechny interrupty
   TCCR2A = 0; // timer/counter control register A casovace 2 - cely vynulovat
   TCCR2B = 0; // to same pro TCCR registr B
@@ -47,7 +49,8 @@ void setup() {
   display.digits[3] = 4;
   display.digits[4] = 5;
   display.digits[5] = 6;
-
+  
+  display.TurnOff();
   display.OnUpdate();
   Wire.begin();
   rtc.initAlm1();
