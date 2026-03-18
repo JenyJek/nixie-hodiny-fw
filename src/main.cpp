@@ -4,6 +4,7 @@
 #include <rtc.h>
 #include <Wire.h>
 #include <pins.h>
+#include <touch.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
@@ -42,6 +43,8 @@ void setup() {
   TCCR2B |= (1 << CS21); // nastaveni nasobice 8 a spousteni casovace
   TIMSK2 |= (1 << OCIE2A);  // zapnout funkci timer compare
   interrupts(); //zapnout zpet vsechny interrupty
+
+  touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
 
   display.digits[0] = 1;
   display.digits[1] = 2;
@@ -99,16 +102,12 @@ void loop(){
     lastMillis2 = millis();
   }
 
-  if(millis() - lastMillis3 >= 20000){
-    //kazdych 20s
-    if(on){
-      display.TurnOff();
-      on = false;
-    }
-    else{
-      display.TurnOn();
-      on = true;
-    }
+  if(millis() - lastMillis3 >= 25){
+    //kazdych 25ms
+    touch.Read();
+
+    //pro DEBUG
+    if(touch.touched) Serial.println("dotyq");
 
     lastMillis3 = millis();
   }
