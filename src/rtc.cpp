@@ -27,11 +27,11 @@ void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
 }
 
 //nastaveni alarmu A2 - uzivatelem nastavitelny budik
-void Rtc::setAlm(uint8_t mins, uint8_t hrs){
+void Rtc::setAlm(){
     Wire.beginTransmission(this->address);
     Wire.write(0x0B);//set pointer to alarm1 registers
-    Wire.write(decToBcd(mins));
-    Wire.write(decToBcd(hrs));
+    Wire.write(decToBcd(almmins));
+    Wire.write(decToBcd(almhrs));
     Wire.write(0x80); // A2M3 - 1 - trigger on minutes & hours match
     Wire.endTransmission();
 }
@@ -103,23 +103,25 @@ void Rtc::read(){
     this->year = Wire.read();
 }
 
-float Rtc::getTemperature() {
+void Rtc::readTemp() {
     Wire.beginTransmission(this->address);
     Wire.write(0x11);                 // MSB registr teplotniho cidla
     Wire.endTransmission();
 
     Wire.requestFrom(this->address, (uint8_t)2); //chceme 2 bytes - samotne cislo se znamenkem (signed) (0x11) a desetina cast LSB (0x12)
 
-    if (Wire.available() < 2) {
-        return NAN;  // dojebalo se D:
-    }
+    temp_msb = Wire.read(); // se znamenkem (signed)
+    temp_lsb = Wire.read(); // desetinna cast
+}
 
-    int8_t msb = Wire.read(); // se znamenkem (signed)
-    uint8_t lsb = Wire.read(); // desetinna cast
+uint8_t Rtc::getTemp()
+{
+    return temp_msb;
+}
 
-    float temperature = msb + ((lsb >> 6) * 0.25f); //desetiny casti jsou 2 bity na 1 - 0.00, 0.25, 0.50, 0.75 pro bity 00, 01, 10, 11
-
-    return temperature;
+uint8_t Rtc::getTempDecimalPart()
+{
+    return ((temp_lsb >> 6) * 25);;
 }
 
 

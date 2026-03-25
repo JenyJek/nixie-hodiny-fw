@@ -7,10 +7,10 @@ class Rtc
     uint8_t decToBcd(uint8_t decimal);
     uint8_t bcdToDec(uint8_t bcd);
     uint8_t getStatusRegister();
-    
+    uint8_t temp_msb, temp_lsb;
     public:
     //funny
-    uint8_t minutes, hours, seconds, day, month, year;
+    uint8_t minutes, hours, seconds, day, month, year, almmins, almhrs;
     enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT}; //NAD: not a day, rtc funguje na 1-7, ne 0-6.
     dayOfWeek dow;
 
@@ -22,7 +22,7 @@ class Rtc
     void setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow);
     
     // Alarm2: nastavitelny userem - minuty&hodiny match
-    void setAlm(uint8_t mins, uint8_t hrs);
+    void setAlm();
     
     // Alarm1: trigger kazdou vterinu
     void initAlm1();
@@ -36,7 +36,11 @@ class Rtc
     
     // cteni z rtc
     void read();
-    float getTemperature();
+    void readTemp();
+
+    //gettery na teplotu
+    uint8_t getTemp();
+    uint8_t getTempDecimalPart();
 };
 
 

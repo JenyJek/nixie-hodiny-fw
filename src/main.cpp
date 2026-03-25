@@ -5,9 +5,13 @@
 #include <Wire.h>
 #include <pins.h>
 #include <touch.h>
+#include <almSound.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
+
+enum DMODE {MODE_TIME, MODE_DATE, MODE_TEMP, MODE_ALM_PRST, MODE_ALM_RUN};
+DMODE displaying;
 
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
@@ -58,16 +62,14 @@ void setup() {
   Wire.begin();
   rtc.initAlm1();
   Serial.println("startup done");
+  displaying = MODE_TIME;
+  display.TurnOn();
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
 bool on;
 void loop(){
   display.OnUpdate(); //zavolat update displeje
-  //rtc.read();
-  
-  
-
   if(millis() - lastMillis >= 100){
     //kazdych 100ms
     Serial.print("actual: ");
@@ -90,16 +92,42 @@ void loop(){
 
   if(millis() - lastMillis2 >= 50){
     if(rtc.getAlm1FlagTrigger()){
-      //on alm 1 trigger flag
-      display.SetDots(display.TIME);
-      rtc.read();
-      //push from rtc to display
-      display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds);
-      if(rtc.seconds == 0){
-        displayBuffer.forceChange = true;
+      // on alm1 trg flag
+      if(displaying = MODE_TIME){
+        display.SetDots(display.TIME);
+        rtc.read();
+        //push from rtc to display
+        display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds);
+        if(rtc.seconds == 0){
+          displayBuffer.forceChange = true;
+        }
+      }
+      else if(displaying = MODE_DATE){
+        display.SetDots(display.DATE);
+        rtc.read();
+        display.fillDigits(rtc.day, rtc.month, rtc.year);
+      }
+      else if(displaying = MODE_TEMP){
+        display.SetDots(display.TEMP);
+        rtc.readTemp();
+        display.fillDigits(0xFF, rtc.getTemp(), rtc.getTempDecimalPart());
+      }
+      else if(displaying = MODE_ALM_PRST){
+        display.SetDots(display.ALARM_SET);
+        display.fillDigits(rtc.almhrs, rtc.almmins, 0xFF);
+      }
+      else if(displaying = MODE_ALM_RUN){
+        display.SetDots(display.ALARM_RUN);
+        rtc.read();
+        display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds);
       }
     }
     lastMillis2 = millis();
+  }
+
+  if(millis() - lastMillis3 >=125 && rtc.getAlm2Flag()){
+    //periodicky update pro melodii, tony se generuji pres interni PWM PIO
+    toneMachine.proceed();
   }
 
   if(millis() - lastMillis3 >= 25){
@@ -113,7 +141,7 @@ void loop(){
   }
 }
 
-
+// jeste treba dodelat spousteni tecek
 static uint_fast8_t mux_phase;
 ISR(TIMER2_COMPA_vect) {
   //interupt service routine, multiplex displeje
@@ -123,6 +151,7 @@ ISR(TIMER2_COMPA_vect) {
   digitalWrite(PIN_DIG_1, LOW);
   digitalWrite(PIN_DIG_2, LOW);
   digitalWrite(PIN_DIG_3, LOW);
+  
   switch (mux_phase){
     case 0:
       mux_phase=1;
