@@ -125,9 +125,10 @@ void loop(){
     lastMillis2 = millis();
   }
 
-  if(millis() - lastMillis3 >=125 && rtc.getAlm2Flag()){
+  if(millis() - lastMillis3 >=125){
     //periodicky update pro melodii, tony se generuji pres interni PWM PIO
-    toneMachine.proceed();
+    if(rtc.getAlm2Flag())toneMachine.proceed();
+    else toneMachine.stop();
   }
 
   if(millis() - lastMillis3 >= 25){

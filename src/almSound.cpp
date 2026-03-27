@@ -38,6 +38,7 @@ int almSound::noteToFreq(char note) {
 
 void almSound::proceed(){
     if(accumulatedWaitTime <= 0){
+        this->stopped = true;
         accumulatedWaitTime = this->melody[current_position];
         tone(PIN_ALM_OUT, noteToFreq(this->melody[current_position+1]), this->melody[current_position]*120);
         this->current_position+=2;
@@ -49,7 +50,9 @@ void almSound::proceed(){
 }
 
 void almSound::stop(){
-    accumulatedWaitTime = 0;
-    current_position=0;
-    noTone(PIN_ALM_OUT);
+    if(!stopped){
+        accumulatedWaitTime = 0;
+        current_position=0;
+        noTone(PIN_ALM_OUT);
+    }
 }

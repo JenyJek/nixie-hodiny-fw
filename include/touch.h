@@ -14,7 +14,7 @@ struct Touch{
         bool touched;
         int32_t readVal;
         void Read();
-        void Setup(uint8_t adcChannel, int32_t samples, int threshold = 40, int alpha = 8) {
+        void Setup(uint8_t adcChannel, uint16_t samples, int threshold = 40, int alpha = 8) {
             this->ADCChannel = adcChannel;
             this->samples = samples;
             this->threshold = threshold;
