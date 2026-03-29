@@ -6,6 +6,7 @@
 #include <pins.h>
 #include <touch.h>
 #include <almSound.h>
+#include <melodies.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
@@ -16,6 +17,7 @@ DMODE displaying;
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
   Serial.begin(115200); //inicializuj seriovou linku s rychlosti 115200baud
+  initMelodies(); //inicializace melodii
 
   //nastaveni modu GPIO
   pinMode(PIN_MH141_A1, OUTPUT);
@@ -38,14 +40,14 @@ void setup() {
   pinMode(PIN_ALM_OUT, OUTPUT);
 
   noInterrupts(); // pri nastavovani nutno vypnout vsechny interrupty
-  TCCR2A = 0; // timer/counter control register A casovace 2 - cely vynulovat
-  TCCR2B = 0; // to same pro TCCR registr B
-  TCNT2  = 0; //pocatecni hodnota timer/counter 2 nastavit na 0
-  OCR2A = 249; // nastaveni output compare registru na 500Hz pri freq. 8MHz
-  //magicka formulka = (16 * 10^6) / (8 * 500 Hz) - 1 (musi byt <0xFF)
-  TCCR2B |= (1 << WGM22); // zapnout ctc mod (normalni citac)
-  TCCR2B |= (1 << CS21); // nastaveni nasobice 8 a spousteni casovace
-  TIMSK2 |= (1 << OCIE2A);  // zapnout funkci timer compare
+  TCCR1A = 0; // timer/counter control register A casovace 1 - cely vynulovat
+  TCCR1B = 0; // to same pro TCCR registr B
+  TCNT1  = 0; //pocatecni hodnota timer/counter 1 nastavit na 0
+  OCR1A = 249; // nastaveni output compare registru na 500Hz pri freq. 16MHz
+  //magicka formulka = (16 * 10^6) / (8 * 500 Hz) - 1 (musi byt <0xFFFF)
+  TCCR1B |= (1 << WGM12); // zapnout ctc mod (normalni citac)
+  TCCR1B |= (1 << CS11); // nastaveni nasobice 8 a spousteni casovace
+  TIMSK1 |= (1 << OCIE1A);  // zapnout funkci timer compare
   interrupts(); //zapnout zpet vsechny interrupty
 
   touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
@@ -59,17 +61,19 @@ void setup() {
   
   display.TurnOff();
   display.OnUpdate();
-  Wire.begin();
-  rtc.initAlm1();
+  //Wire.begin();
+  //rtc.initAlm1();
   Serial.println("startup done");
   displaying = MODE_TIME;
   display.TurnOn();
+  toneMachine.currentMelody = melodies.alarmMelody;
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
 bool on;
 void loop(){
-  display.OnUpdate(); //zavolat update displeje
+  toneMachine.loop();
+  /*display.OnUpdate(); //zavolat update displeje
   if(millis() - lastMillis >= 100){
     //kazdych 100ms
     Serial.print("actual: ");
@@ -93,7 +97,7 @@ void loop(){
   if(millis() - lastMillis2 >= 50){
     if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
-      if(displaying = MODE_TIME){
+      if(displaying == MODE_TIME){
         display.SetDots(display.TIME);
         rtc.read();
         //push from rtc to display
@@ -102,41 +106,45 @@ void loop(){
           displayBuffer.forceChange = true;
         }
       }
-      else if(displaying = MODE_DATE){
+      else if(displaying == MODE_DATE){
         display.SetDots(display.DATE);
         rtc.read();
         display.fillDigits(rtc.day, rtc.month, rtc.year);
       }
-      else if(displaying = MODE_TEMP){
+      else if(displaying == MODE_TEMP){
         display.SetDots(display.TEMP);
         rtc.readTemp();
         display.fillDigits(0xFF, rtc.getTemp(), rtc.getTempDecimalPart());
       }
-      else if(displaying = MODE_ALM_PRST){
+      else if(displaying == MODE_ALM_PRST){
         display.SetDots(display.ALARM_SET);
         display.fillDigits(rtc.almhrs, rtc.almmins, 0xFF);
       }
-      else if(displaying = MODE_ALM_RUN){
+      else if(displaying == MODE_ALM_RUN){
         display.SetDots(display.ALARM_RUN);
         rtc.read();
         display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds);
       }
     }
     lastMillis2 = millis();
-  }
-
-  if(millis() - lastMillis3 >=125){
+  }*/
+ 
+  /*bool activ;
+  if(millis() - lastMillis2 >=65){
     //periodicky update pro melodii, tony se generuji pres interni PWM PIO
-    if(rtc.getAlm2Flag())toneMachine.proceed();
+    if(touch.touched) toneMachine.proceed();
     else toneMachine.stop();
-  }
+    //Serial.println("alarm!");
+    lastMillis2 = millis();
+  }*/
 
   if(millis() - lastMillis3 >= 25){
+    //Serial.println("touch!");
     //kazdych 25ms
     touch.Read();
 
     //pro DEBUG
-    if(touch.touched) Serial.println("dotyq");
+    toneMachine.run = touch.touched;
 
     lastMillis3 = millis();
   }
@@ -144,7 +152,7 @@ void loop(){
 
 // jeste treba dodelat spousteni tecek
 static uint_fast8_t mux_phase;
-ISR(TIMER2_COMPA_vect) {
+ISR(TIMER1_COMPA_vect) {
   //interupt service routine, multiplex displeje
   //casovano kazdych 5ms (133Hz obnovovaci frekvence)
 

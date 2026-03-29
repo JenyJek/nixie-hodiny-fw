@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include <melodies.h>
 
 struct almSound
 {
@@ -7,10 +8,14 @@ struct almSound
         int noteToFreq(char note);
         uint8_t current_position;
         uint8_t accumulatedWaitTime;
-        bool stopped;
-    public:
         void proceed();
-        char melody[32] = "1E2D1f1g2c1B1D1E2B1A1c1E2A2X0";
+        uint64_t lastMillis;
+    public:
+        Melody currentMelody;
+        bool run = false;
+        almSound() : current_position(0), accumulatedWaitTime(0), lastMillis(0), currentMelody("", 0), run(false) {}
         void stop();
+        void loop();
 };
 extern almSound toneMachine;
+//e2d2f1g1
