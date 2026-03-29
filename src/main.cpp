@@ -66,11 +66,11 @@ void setup() {
   Serial.println("startup done");
   displaying = MODE_TIME;
   display.TurnOn();
-  toneMachine.currentMelody = melodies.alarmMelody;
+  toneMachine.currentMelody = melodies.okSfxMelody;
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
-bool on;
+bool lastTouch;
 void loop(){
   toneMachine.loop();
   /*display.OnUpdate(); //zavolat update displeje
@@ -144,8 +144,11 @@ void loop(){
     touch.Read();
 
     //pro DEBUG
-    toneMachine.run = touch.touched;
-
+    if(lastTouch != touch.touched){
+      toneMachine.run = touch.touched;
+      lastTouch = touch.touched;
+    }
+    
     lastMillis3 = millis();
   }
 }

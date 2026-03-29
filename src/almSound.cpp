@@ -69,24 +69,27 @@ void almSound::proceed(){
         int Outtone = noteToFreq(this->currentMelody.melody[current_position+1]);
         Outtone == 0 ? noTone(PIN_ALM_OUT) : tone(PIN_ALM_OUT, Outtone);
         this->current_position+=2;
-        if(this->currentMelody.melody[current_position] == 0) current_position=0;
+        if(this->currentMelody.melody[current_position] == '0'){
+            Serial.print("Zero here! | ");
+            Serial.println(this->currentMelody.oneShot);
+            if(this->currentMelody.oneShot)this->stop();
+            else this->current_position = 0;
+        }
     }
     else{
         accumulatedWaitTime--;
     }
-    Serial.println(accumulatedWaitTime);
 }
 
 void almSound::stop(){
-    accumulatedWaitTime = 0;
-    current_position=0;
+    this->accumulatedWaitTime = 0;
+    this->current_position=0;
     noTone(PIN_ALM_OUT);
-    run = false;
+    this->run = false;
 }
 
 void almSound::loop(){
-    uint32_t msPerBeat = (this->currentMelody.bpm);
-    if(millis() - this->lastMillis >= (msPerBeat)){
+    if(millis() - this->lastMillis >= this->currentMelody.bpm){
         this->run ? this->proceed() : this->stop();
         this->lastMillis = millis();
     }

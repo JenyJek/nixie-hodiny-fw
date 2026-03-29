@@ -13,9 +13,10 @@ struct almSound
     public:
         Melody currentMelody;
         bool run = false;
-        almSound() : current_position(0), accumulatedWaitTime(0), lastMillis(0), currentMelody("", 0), run(false) {}
+        almSound() : current_position(0), accumulatedWaitTime(0), lastMillis(0), currentMelody("", 0, false), run(false) {}
         void stop();
         void loop();
+        void play() {this->run = true;};
 };
 extern almSound toneMachine;
 //e2d2f1g1
