@@ -14,10 +14,12 @@ Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
 enum DMODE {MODE_TIME, MODE_DATE, MODE_TEMP, MODE_ALM_PRST, MODE_ALM_RUN};
 DMODE displaying;
 
+void testAllSegments();
+
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
   Serial.begin(115200); //inicializuj seriovou linku s rychlosti 115200baud
-  initMelodies(); //inicializace melodii
+  //initMelodies(); //inicializace melodii
 
   //nastaveni modu GPIO
   pinMode(PIN_MH141_A1, OUTPUT);
@@ -50,31 +52,37 @@ void setup() {
   TIMSK1 |= (1 << OCIE1A);  // zapnout funkci timer compare
   interrupts(); //zapnout zpet vsechny interrupty
 
-  touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
+  /*touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
 
-  display.digits[0] = 1;
-  display.digits[1] = 2;
-  display.digits[2] = 3;
-  display.digits[3] = 4;
-  display.digits[4] = 5;
-  display.digits[5] = 6;
+  displayBuffer.digits[0] = 0;
+  displayBuffer.digits[1] = 0;
+  displayBuffer.digits[2] = 0;
+  displayBuffer.digits[3] = 0;
+  displayBuffer.digits[4] = 0;
+  displayBuffer.digits[5] = 0;
   
   display.TurnOff();
-  display.OnUpdate();
+  //display.OnUpdate();
   //Wire.begin();
   //rtc.initAlm1();
   Serial.println("startup done");
   displaying = MODE_TIME;
   display.TurnOn();
-  toneMachine.currentMelody = melodies.okSfxMelody;
+  toneMachine.currentMelody = melodies.okSfxMelody;*/
+  digitalWrite(PIN_HV_MOS, HIGH);
+  testAllSegments();
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3;
 bool lastTouch;
+uint8_t anode, cathode = 0;
+uint8_t mode = 0;
+bool step;
 void loop(){
-  toneMachine.loop();
-  /*display.OnUpdate(); //zavolat update displeje
-  if(millis() - lastMillis >= 100){
+  //testAllSegments();
+  //toneMachine.loop();
+  //display.OnUpdate(); //zavolat update displeje
+  /*(millis() - lastMillis >= 100){
     //kazdych 100ms
     Serial.print("actual: ");
     Serial.print(display.getHours());
@@ -92,9 +100,8 @@ void loop(){
     Serial.print(displayBuffer.digits[4] == 0xF ?  '-' : char(displayBuffer.digits[4] + 48));
     Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5] + 48));
     lastMillis = millis();
-  }
-
-  if(millis() - lastMillis2 >= 50){
+  }*/
+ /* if(millis() - lastMillis2 >= 50){
     if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
       if(displaying == MODE_TIME){
@@ -127,23 +134,12 @@ void loop(){
       }
     }
     lastMillis2 = millis();
-  }*/
- 
-  /*bool activ;
-  if(millis() - lastMillis2 >=65){
-    //periodicky update pro melodii, tony se generuji pres interni PWM PIO
-    if(touch.touched) toneMachine.proceed();
-    else toneMachine.stop();
-    //Serial.println("alarm!");
-    lastMillis2 = millis();
-  }*/
+  }
 
   if(millis() - lastMillis3 >= 25){
-    //Serial.println("touch!");
     //kazdych 25ms
     touch.Read();
 
-    //pro DEBUG
     if(lastTouch != touch.touched){
       toneMachine.run = touch.touched;
       lastTouch = touch.touched;
@@ -151,8 +147,102 @@ void loop(){
     
     lastMillis3 = millis();
   }
+  */
+  /*
+  if(millis()-lastMillis2 >= 500){
+    cathode++;
+    if(cathode == 10){
+      cathode = 0;
+      displayBuffer.digits[anode] = cathode;
+      anode++;
+      if(anode == 6){
+        anode = 0;
+        mode = 1;
+      }
+    }
+
+    displayBuffer.digits[anode] = cathode;
+    lastMillis2 = millis();
+  }
+
+  displayBuffer.Push();
+
+*/
+  /*if(millis() - lastMillis3 >= 25){
+    //Serial.println("touch!");
+    //kazdych 25ms
+    touch.Read();
+
+    //pro DEBUG
+    if(lastTouch != touch.touched){
+      if(touch.touched) toneMachine.play(melodies.hapticMelody);
+      step = true;
+      lastTouch = touch.touched;
+    }
+    
+    lastMillis3 = millis();
+  }*/
 }
 
+// Simple cathode/anode test - cycles through all segments without animation
+void testAllSegments() {
+  Serial.println("Starting segment test...");
+  
+  // Direct pin control for testing
+  const uint8_t anodePins[4] = {PIN_DIG_1, PIN_DIG_2, PIN_DIG_3};
+  const uint8_t cathodeA[2] = {PIN_MH141_A1, PIN_MH141_A2};
+  const uint8_t cathodeB[2] = {PIN_MH141_B1, PIN_MH141_B2};
+  const uint8_t cathodeC[2] = {PIN_MH141_C1, PIN_MH141_C2};
+  const uint8_t cathodeD[2] = {PIN_MH141_D1, PIN_MH141_D2};
+  
+  // Test each anode
+  for(int anode = 0; anode < 4; anode++) {
+    digitalWrite(anodePins[anode], HIGH);
+    
+    // Test each cathode (0-11)
+    for(int cathode = 0; cathode < 12; cathode++) {
+      // Decode cathode value to BCD
+      uint8_t bit0 = (cathode & 1) ? HIGH : LOW;
+      uint8_t bit1 = (cathode & 2) ? HIGH : LOW;
+      uint8_t bit2 = (cathode & 4) ? HIGH : LOW;
+      uint8_t bit3 = (cathode & 8) ? HIGH : LOW;
+      
+      // Set cathode pins
+      digitalWrite(cathodeA[0], bit0);
+      digitalWrite(cathodeB[0], bit1);
+      digitalWrite(cathodeC[0], bit2);
+      digitalWrite(cathodeD[0], bit3);
+
+      Serial.print("Anode: ");
+      Serial.print(anode);
+      Serial.print(" Cathode: ");
+      Serial.println(cathode);
+      
+      delay(300);
+    }
+    for(int cathode = 0; cathode < 12; cathode++){
+      // Decode cathode value to BCD
+      uint8_t bit0 = (cathode & 1) ? HIGH : LOW;
+      uint8_t bit1 = (cathode & 2) ? HIGH : LOW;
+      uint8_t bit2 = (cathode & 4) ? HIGH : LOW;
+      uint8_t bit3 = (cathode & 8) ? HIGH : LOW;
+
+      digitalWrite(cathodeA[1], bit0);
+      digitalWrite(cathodeB[1], bit1);
+      digitalWrite(cathodeC[1], bit2);
+      digitalWrite(cathodeD[1], bit3);
+    }
+      Serial.print("Anode: ");
+      Serial.print(anode);
+      Serial.print(" Cathode: ");
+      Serial.println(cathode);
+      
+      delay(300);
+    }
+    
+    digitalWrite(anodePins[anode], LOW);
+    Serial.println("Test complete!");
+  }
 // jeste treba dodelat spousteni tecek
 static uint_fast8_t mux_phase;
 ISR(TIMER1_COMPA_vect) {

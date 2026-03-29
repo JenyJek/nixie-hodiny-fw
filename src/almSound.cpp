@@ -95,5 +95,10 @@ void almSound::loop(){
     }
 }
 
+void almSound::play(Melody melody){
+    this->currentMelody = melody;
+    this->run = true;
+}
+
 // Global instance definition
 almSound toneMachine;

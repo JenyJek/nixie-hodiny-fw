@@ -16,6 +16,7 @@ struct almSound
         almSound() : current_position(0), accumulatedWaitTime(0), lastMillis(0), currentMelody("", 0, false), run(false) {}
         void stop();
         void loop();
+        void play(Melody melody);
         void play() {this->run = true;};
 };
 extern almSound toneMachine;

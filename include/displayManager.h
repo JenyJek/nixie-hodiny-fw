@@ -14,8 +14,8 @@ struct Display {
         //nastavenicko
         bool slotSecondsUnits = false;
         uint16_t animUpdateInterval = 150; //interval volani OnUpdate v ms
-        uint16_t rotateSecondsInterval = 75; //interval otaceni sekund v ms
-        uint16_t rotateMinutesHoursInterval = 75; //interval otaceni minut a hodin v ms
+        uint16_t rotateSecondsInterval = /*75*/10; //interval otaceni sekund v ms
+        uint16_t rotateMinutesHoursInterval = /*75*/10; //interval otaceni minut a hodin v ms
         uint16_t doubleDotOnTime = 250;
         enum dotMode {NONE, TIME, DATE, ALARM_SET, ALARM_RUN, TEMP};
         dotMode currentMode;
