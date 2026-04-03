@@ -79,7 +79,6 @@ uint8_t anode, cathode = 0;
 uint8_t mode = 0;
 bool step;
 void loop(){
-  //testAllSegments();
   //toneMachine.loop();
   //display.OnUpdate(); //zavolat update displeje
   /*(millis() - lastMillis >= 100){
@@ -148,26 +147,6 @@ void loop(){
     lastMillis3 = millis();
   }
   */
-  /*
-  if(millis()-lastMillis2 >= 500){
-    cathode++;
-    if(cathode == 10){
-      cathode = 0;
-      displayBuffer.digits[anode] = cathode;
-      anode++;
-      if(anode == 6){
-        anode = 0;
-        mode = 1;
-      }
-    }
-
-    displayBuffer.digits[anode] = cathode;
-    lastMillis2 = millis();
-  }
-
-  displayBuffer.Push();
-
-*/
   /*if(millis() - lastMillis3 >= 25){
     //Serial.println("touch!");
     //kazdych 25ms
@@ -236,78 +215,69 @@ void testAllSegments() {
       Serial.print(anode);
       Serial.print(" Cathode: ");
       Serial.println(cathode);
-      
       delay(300);
-    }
-    
-    digitalWrite(anodePins[anode], LOW);
-    Serial.println("Test complete!");
+      digitalWrite(anodePins[anode], LOW);
   }
-// jeste treba dodelat spousteni tecek
-static uint_fast8_t mux_phase;
-ISR(TIMER1_COMPA_vect) {
-  //interupt service routine, multiplex displeje
-  //casovano kazdych 5ms (133Hz obnovovaci frekvence)
 
-  //vypnout anody
-  digitalWrite(PIN_DIG_1, LOW);
-  digitalWrite(PIN_DIG_2, LOW);
-  digitalWrite(PIN_DIG_3, LOW);
-  
-  switch (mux_phase){
-    case 0:
-      mux_phase=1;
-      //zobrazeni tecek #1 - leva spodni tecka
-      digitalWrite(PIN_DOT, displayBuffer.lowerLeftDot);
-      //zobrazujeme na MH74141 A - desiky hodin
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursTens & 0x01);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursTens & 0x02);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursTens & 0x04);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursTens & 0x08);
-      //zobrazujeme na MH74141 B - jednotky minut
-      digitalWrite(PIN_MH141_A2, displayBuffer.displayedMinutesUnits & 0x01);
-      digitalWrite(PIN_MH141_B2, displayBuffer.displayedMinutesUnits & 0x02);
-      digitalWrite(PIN_MH141_C2, displayBuffer.displayedMinutesUnits & 0x04);
-      digitalWrite(PIN_MH141_D2, displayBuffer.displayedMinutesUnits & 0x08);
-      //zapnout anody 
-      digitalWrite(PIN_DIG_1, HIGH);
-    break;
-    case 1: //faze 1, zobrazujeme jednotky a desitky hodin
-      mux_phase=2;
-      //zobrazeni tecek #2 - prava spodni tecka
-      digitalWrite(PIN_DOT, displayBuffer.lowerRightDot);
-      //zobrazujeme na MH74141 A - jednotky hodin
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedHoursUnits & 0x01);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedHoursUnits & 0x02);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedHoursUnits & 0x04);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedHoursUnits & 0x08);
-      //zobrazujeme na MH74141 B - jednotky sekund
-      digitalWrite(PIN_MH141_B2, displayBuffer.displayedSecondsUnits & 0x01);
-      digitalWrite(PIN_MH141_C2, displayBuffer.displayedSecondsUnits & 0x02);
-      digitalWrite(PIN_MH141_D2, displayBuffer.displayedSecondsUnits & 0x04);
-      digitalWrite(PIN_MH141_A2, displayBuffer.displayedSecondsUnits & 0x08);
-      //zapnout anody 
-      digitalWrite(PIN_DIG_2, HIGH);
-    break;
-    case 2: //faze 2, zobrazujeme jednotky a desitky minut
-      mux_phase=0;
-      //zobrazeni tecek #3 - obe horni tecky
-      digitalWrite(PIN_DOT, displayBuffer.upperDots);
-      //zobrazujeme na MH74141 A - desiky minut
-      digitalWrite(PIN_MH141_B1, displayBuffer.displayedMinutesTens & 0x01);
-      digitalWrite(PIN_MH141_C1, displayBuffer.displayedMinutesTens & 0x02);
-      digitalWrite(PIN_MH141_D1, displayBuffer.displayedMinutesTens & 0x04);
-      digitalWrite(PIN_MH141_A1, displayBuffer.displayedMinutesTens & 0x08);
-      //zobrazujeme na MH74141 B - desitky sekund
-      digitalWrite(PIN_MH141_A2, displayBuffer.displayedSecondsTens & 0x01);
-      digitalWrite(PIN_MH141_B2, displayBuffer.displayedSecondsTens & 0x02);
-      digitalWrite(PIN_MH141_C2, displayBuffer.displayedSecondsTens & 0x04);
-      digitalWrite(PIN_MH141_D2, displayBuffer.displayedSecondsTens & 0x08);
-      //zapnout anody 
-      digitalWrite(PIN_DIG_3, HIGH);
-    break;
-    default:
-      mux_phase = 0;
-    break;
+  Serial.println("Test complete!");
+}
+
+#define ONTIME 3
+#define OFFTIME 1
+volatile uint_fast8_t pairIndex, timer_counter;
+volatile bool isBlanking;
+volatile const uint_fast8_t nix_LUT[]={0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7, 0x8, 0x9, 0xF}; //pouzite pro opravu hw protoze jenyjek je dementni :down:
+
+ISR(TIMER1_COMPA_vect) {
+  timer_counter--;
+
+  if (timer_counter == 0) {
+    if (!isBlanking) {
+      // --- DEAD-TIME  cas, kdy jsou vsechny anody vypnuty---
+            
+      // 1. vypni vsetky anody (Anody su PC0, PC1, PC2 / A0-A2)
+      PORTC &= ~0x07; 
+
+      // 2. na obe MH74141 nastav (0x0F - 0b1111) tj. vypnuto
+      PORTD = (PORTD & 0x0F) | (0x0F << 4); // 1 (PD4-7)
+      PORTB = (PORTB & 0xF0) | 0x0F;        // 2 (PB0-3), PB4 je! des. tecka
+      isBlanking = true;
+      timer_counter = OFFTIME;
+    } 
+    else {
+      // --- ON-TIME  zapni jednu z anod 1,2,3 ---
+            
+      // 1. vybrat anodu
+      pairIndex++;
+      if (pairIndex >= 3) pairIndex = 0;
+
+      // 2. Load data from buffer for this pair
+      uint_fast8_t cathod_drv_1; 
+      uint_fast8_t cathod_drv_2;
+
+      // vyber co se kam da:
+      if (pairIndex == 0) {      // Anode A0: Tubes 1 and 5
+        cathod_drv_1 = displayBuffer.displayedHoursTens;//tube 1 
+        cathod_drv_2 = displayBuffer.displayedSecondsTens; //tube 5
+      } else if (pairIndex == 1) { // Anode A1: Tubes 2 and 4
+        cathod_drv_1 = displayBuffer.displayedHoursUnits; //tube 2
+        cathod_drv_2 = displayBuffer.displayedMinutesUnits; //tube 4
+      } else {                   // Anode A2: Tubes 3 and 6
+        cathod_drv_1 = displayBuffer.displayedMinutesTens; //tube 3
+        cathod_drv_2 = displayBuffer.displayedSecondsUnits; //tube 6
+      }
+      /* poznamka programatora - uint_fast8_t neni nic jineho nez fancy #define. radeji to ale napiseme,
+      funguje to totiz jako jakysi mental reminder, ze jsme v ISR a tudiz program musi byt co nejmensi, nejrychlejsi*/
+
+      // 3. zapis dat na 74141
+      PORTD = (PORTD & 0x0F) | (nix_LUT[cathod_drv_1] << 4);
+      PORTB = (PORTB & 0xF0) | (nix_LUT[cathod_drv_2] & 0x0F);
+
+      // 4. zapnut jednu z anod
+      PORTC = (PORTC & ~0x07) | (1 << pairIndex);
+
+      isBlanking = false;
+      timer_counter = ONTIME;
+    }
   }
 }

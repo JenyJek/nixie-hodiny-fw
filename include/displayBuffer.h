@@ -25,12 +25,12 @@ struct DisplayBuffer {
     }
 
     //rychle "pole" pro ISR
-    uint_fast8_t displayedSecondsUnits;
-    uint_fast8_t displayedSecondsTens;
-    uint_fast8_t displayedMinutesUnits;
-    uint_fast8_t displayedMinutesTens;
-    uint_fast8_t displayedHoursUnits;
-    uint_fast8_t displayedHoursTens;
+    volatile uint_fast8_t displayedSecondsUnits;
+    volatile uint_fast8_t displayedSecondsTens;
+    volatile uint_fast8_t displayedMinutesUnits;
+    volatile uint_fast8_t displayedMinutesTens;
+    volatile uint_fast8_t displayedHoursUnits;
+    volatile uint_fast8_t displayedHoursTens;
 
     uint_fast8_t lowerLeftDot, lowerRightDot, upperDots;
 };
