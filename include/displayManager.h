@@ -19,6 +19,7 @@ struct Display {
         uint16_t doubleDotOnTime = 250;
         enum dotMode {NONE, TIME, DATE, ALARM_SET, ALARM_RUN, TEMP};
         dotMode currentMode;
+        bool slotToInvisible = false; //pro DMODy, ktere zahrnuji prazdny charakter - zahrnuje v toceni cislicema i 0xA, resp. nezobrazeno
 
         void SetDots(dotMode mode){
             currentMode = mode;

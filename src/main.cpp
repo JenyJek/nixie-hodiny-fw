@@ -14,6 +14,10 @@ Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
 enum DMODE {MODE_TIME, MODE_DATE, MODE_TEMP, MODE_ALM_PRST, MODE_ALM_RUN};
 DMODE displaying;
 
+//nastavenicka tady
+const unsigned int autoModeToSecondsTime = 10000;
+
+
 void testAllSegments();
 
 void setup() {
@@ -69,14 +73,13 @@ void setup() {
   testAllSegments();
 }
 
-uint64_t lastMillis, lastMillis2, lastMillis3;
+uint64_t lastMillis, lastMillis2, lastMillis3, switchBackTime;
 bool lastTouch;
 uint8_t anode, cathode = 0;
 uint8_t mode = 0;
 bool step;
 void loop(){
   toneMachine.loop();
-  rtc.read();
   display.OnUpdate(); //zavolat update displeje
   /*(millis() - lastMillis >= 100){
     //kazdych 100ms
@@ -97,13 +100,16 @@ void loop(){
     Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5] + 48));
     lastMillis = millis();
   }*/
- if(millis() - lastMillis2 >= 500){
-    if(/*rtc.getAlm1FlagTrigger()*/true){
+
+   if(millis() - lastMillis >= 50){ //zobrazovani na displej
+    if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
+      rtc.read();
       if(displaying == MODE_TIME){
         display.SetDots(display.TIME);
         rtc.read();
         //push from rtc to display
+        display.slotToInvisible = false;
         display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds);
         if(rtc.seconds == 0){
           displayBuffer.forceChange = true;
@@ -112,39 +118,49 @@ void loop(){
       else if(displaying == MODE_DATE){
         display.SetDots(display.DATE);
         rtc.read();
+        display.slotToInvisible = false;
         display.fillDigits(rtc.day, rtc.month, rtc.year);
       }
       else if(displaying == MODE_TEMP){
         display.SetDots(display.TEMP);
         rtc.readTemp();
-        display.fillDigits(0xFF, rtc.getTemp(), rtc.getTempDecimalPart());
+        display.slotToInvisible = true;
+        display.fillDigits(0xAA, rtc.getTemp(), rtc.getTempDecimalPart());
       }
       else if(displaying == MODE_ALM_PRST){
         display.SetDots(display.ALARM_SET);
-        display.fillDigits(rtc.almhrs, rtc.almmins, 0xFF);
+        display.slotToInvisible = true;
+        display.fillDigits(rtc.almhrs, rtc.almmins, 0xAA);
       }
       else if(displaying == MODE_ALM_RUN){
         display.SetDots(display.ALARM_RUN);
         rtc.read();
+        display.slotToInvisible = false;
         display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds);
       }
     }
-    lastMillis2 = millis();
+    lastMillis = millis();
   }
 
-  if(millis() - lastMillis3 >= 25){
-    //Serial.println("touch!");
-    //kazdych 25ms
+  if(millis() - lastMillis2 >= 25){ //detekce dotyku a prepinani DMODu
     touch.Read();
 
     //pro DEBUG
     if(lastTouch != touch.touched){
-      if(touch.touched) toneMachine.play(melodies.hapticMelody);
-      step = true;
+      if(touch.touched){
+        toneMachine.play(melodies.hapticMelody);
+        switchBackTime = millis();
+        displaying = (DMODE)(displaying + 1);
+        if(displaying >= MODE_ALM_RUN) displaying = MODE_TIME;
+        Serial.println("touch");
+      } 
       lastTouch = touch.touched;
     }
-    
-    lastMillis3 = millis();
+    lastMillis2 = millis();
+  }
+
+  if(millis() - switchBackTime >= autoModeToSecondsTime){ //auto prepinani DMODu zpet na cas
+    if(!displaying == MODE_TIME) displaying = MODE_TIME;
   }
 }
 
@@ -174,7 +190,7 @@ void testAllSegments() {
 
 #define ONTIME 4
 #define OFFTIME 2
-//tady se pouzije volatile aby sepredeslo memory optimization
+//tady se pouzije volatile aby se predeslo memory optimization
 volatile uint_fast8_t pairIndex, timer_counter;
 volatile bool isBlanking;
 volatile const uint_fast8_t nix_LUT_upper[]={0x00, 0x04, 0x0C, 0x02, 0x0A, 0x06, 0x0E, 0x09, 0x01, 0x08, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F, 0x0F}; //pouzite pro opravu hw protoze jenyjek je dementni :down:

@@ -2,7 +2,7 @@
 #include <Arduino.h>
 class Rtc
 {
-    private:
+    public:
     uint8_t address;
     uint8_t decToBcd(uint8_t decimal);
     uint8_t bcdToDec(uint8_t bcd);

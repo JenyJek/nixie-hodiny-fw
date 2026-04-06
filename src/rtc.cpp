@@ -32,7 +32,7 @@ void Rtc::setAlm(){
     Wire.write(0x0B);//set pointer to alarm1 registers
     Wire.write(decToBcd(almmins));
     Wire.write(decToBcd(almhrs));
-    Wire.write(0x80); // A2M3 - 1 - trigger on minutes & hours match
+    Wire.write(0x80); // A2M4 - 1 - trigger on minutes & hours match
     Wire.endTransmission();
 }
 
@@ -53,7 +53,8 @@ void Rtc::initAlm1(){
     Wire.write(0x80); //A1M1 - 1
     Wire.write(0x80); //A1M2 - 1
     Wire.write(0x80); //A1M3 - 1
-    Wire.write(0x80); //A1M4 - 1
+    Wire.write(0x80); //A1M4 - 1 trigger every second
+    Wire.endTransmission();
 }
 
 uint8_t Rtc::getStatusRegister() {
