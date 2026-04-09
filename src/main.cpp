@@ -16,6 +16,7 @@ DMODE displaying;
 
 //nastavenicka tady
 const unsigned int autoModeToSecondsTime = 10000;
+const bool testSegments = false;
 
 
 void testAllSegments();
@@ -58,7 +59,7 @@ void setup() {
 
   touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
 
-  for(uint8_t digit : displayBuffer.digits){
+  for(uint8_t digit : displayBuffer.digits){//nasypat do bufferu nuly abysme meli definovano co zobrazovat
     displayBuffer.digits[digit] = 0;
   }
     
@@ -70,38 +71,26 @@ void setup() {
   displaying = MODE_TIME;
   display.TurnOn();
   toneMachine.currentMelody = melodies.okSfxMelody;
-  testAllSegments();
+  if(testSegments) testAllSegments();
+  toneMachine.play();
+
+//for debug purpose
+  rtc.setTime(0,34,12);
+  rtc.setDate(10, 4, 26, 4);
+  rtc.almmins = 35;
+  rtc.almhrs = 12;
+  rtc.setAlm();
 }
 
 uint64_t lastMillis, lastMillis2, lastMillis3, switchBackTime;
 bool lastTouch;
 uint8_t anode, cathode = 0;
 uint8_t mode = 0;
-bool step;
+bool step, almRunning;
 void loop(){
   toneMachine.loop();
   display.OnUpdate(); //zavolat update displeje
-  /*(millis() - lastMillis >= 100){
-    //kazdych 100ms
-    Serial.print("actual: ");
-    Serial.print(display.getHours());
-    Serial.print(":");
-    Serial.print(display.getMinutes());
-    Serial.print(":");
-    Serial.print(display.getSeconds());
-    Serial.print(" | in buffer: ");
-    Serial.print(displayBuffer.digits[0] == 0xF ?  '-' : char(displayBuffer.digits[0] + 48));
-    Serial.print(displayBuffer.digits[1] == 0xF ?  '-' : char(displayBuffer.digits[1] + 48));
-    Serial.print(displayBuffer.upperDots ? (displayBuffer.lowerLeftDot ? ":" : "-") : (displayBuffer.lowerLeftDot ? "." : " "));
-    Serial.print(displayBuffer.digits[2] == 0xF ?  '-' : char(displayBuffer.digits[2] + 48));
-    Serial.print(displayBuffer.digits[3] == 0xF ?  '-' : char(displayBuffer.digits[3] + 48));
-    Serial.print(displayBuffer.upperDots ? (displayBuffer.lowerRightDot ? ":" : "-") : (displayBuffer.lowerRightDot ? "." : " "));
-    Serial.print(displayBuffer.digits[4] == 0xF ?  '-' : char(displayBuffer.digits[4] + 48));
-    Serial.println(displayBuffer.digits[5] == 0xF ?  '-' : char(displayBuffer.digits[5] + 48));
-    lastMillis = millis();
-  }*/
-
-   if(millis() - lastMillis >= 50){ //zobrazovani na displej
+  if(millis() - lastMillis >= 50){ //zobrazovani na displej
     if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
       rtc.read();
@@ -142,23 +131,38 @@ void loop(){
     lastMillis = millis();
   }
 
-  if(millis() - lastMillis2 >= 25){ //detekce dotyku a prepinani DMODu
+  if(millis() - lastMillis2 >= 25){ //detekce dotyku, ruseni alarmu a prepinani DMODu
     touch.Read();
 
     //pro DEBUG
     if(lastTouch != touch.touched){
       if(touch.touched){
-        toneMachine.play(melodies.hapticMelody);
-        switchBackTime = millis();
-        displaying = (DMODE)(displaying + 1);
-        if(displaying >= MODE_ALM_RUN) displaying = MODE_TIME;
-        Serial.println("touch");
+        if(almRunning){
+          toneMachine.stop();
+          toneMachine.play(melodies.okSfxMelody);
+          displaying = MODE_TIME;
+          almRunning = false;
+          rtc.clearAlm();
+        }else{
+          toneMachine.play(melodies.hapticMelody);
+          switchBackTime = millis();
+          displaying = (DMODE)(displaying + 1);
+          if(displaying >= MODE_ALM_RUN) displaying = MODE_TIME;
+        }      
       } 
       lastTouch = touch.touched;
     }
     lastMillis2 = millis();
   }
 
+  if(millis() - lastMillis3 >= 1000){ //alarm, budik
+    if(rtc.getAlm2Flag() && !almRunning){
+      displaying = MODE_ALM_RUN;
+      toneMachine.currentMelody = melodies.alarmMelody;
+      toneMachine.play();
+      almRunning = true;
+    }
+  }
   if(millis() - switchBackTime >= autoModeToSecondsTime){ //auto prepinani DMODu zpet na cas
     if(!displaying == MODE_TIME) displaying = MODE_TIME;
   }

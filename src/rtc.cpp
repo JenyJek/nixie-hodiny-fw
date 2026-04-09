@@ -10,18 +10,18 @@ Rtc::Rtc (uint8_t address){
 void Rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.beginTransmission(this->address);
     Wire.write(0x00);//set starting pointer to 0x00
-    Wire.write(decToBcd(secs));//seconds in bcd format, msb first, 0xtens, 0xunits
-    Wire.write(decToBcd(mins));
-    Wire.write(decToBcd(hrs));
+    Wire.write(decToBcd(secs) & 0x7F);//seconds in bcd format, msb first, 0xtens, 0xunits
+    Wire.write(decToBcd(mins) & 0x7F);
+    Wire.write(decToBcd(hrs) & 0x3F);
     Wire.endTransmission();
 }
 
 void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
     Wire.beginTransmission(this->address);
     Wire.write(0x03);//set starting pointer to 0x03
-    Wire.write(decToBcd(dow));//seconds in bcd format, msb first, 0xtens, 0xunits
-    Wire.write(decToBcd(day));
-    Wire.write(decToBcd(month));
+    Wire.write(decToBcd(dow) & 0x07);//seconds in bcd format, msb first, 0xtens, 0xunits
+    Wire.write(decToBcd(day) & 0x3F);
+    Wire.write(decToBcd(month) & 0x1F);
     Wire.write(decToBcd(year));
     Wire.endTransmission();
 }
@@ -29,10 +29,10 @@ void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
 //nastaveni alarmu A2 - uzivatelem nastavitelny budik
 void Rtc::setAlm(){
     Wire.beginTransmission(this->address);
-    Wire.write(0x0B);//set pointer to alarm1 registers
-    Wire.write(decToBcd(almmins));
-    Wire.write(decToBcd(almhrs));
-    Wire.write(0x80); // A2M4 - 1 - trigger on minutes & hours match
+    Wire.write(0x0B); // set pointer to Alarm2 registers
+    Wire.write(decToBcd(almmins) & 0x7F);
+    Wire.write(decToBcd(almhrs) & 0x3F);
+    Wire.write(0x80);
     Wire.endTransmission();
 }
 
@@ -111,18 +111,18 @@ void Rtc::readTemp() {
 
     Wire.requestFrom(this->address, (uint8_t)2); //chceme 2 bytes - samotne cislo se znamenkem (signed) (0x11) a desetina cast LSB (0x12)
 
-    temp_msb = Wire.read(); // se znamenkem (signed)
-    temp_lsb = Wire.read(); // desetinna cast
+    temp_msb = Wire.read() & 0x7F; // se znamenkem (signed)
+    temp_lsb = Wire.read() >> 6; // desetinna cast
 }
 
 uint8_t Rtc::getTemp()
 {
-    return temp_msb;
+    return bcdToDec(temp_msb);
 }
 
 uint8_t Rtc::getTempDecimalPart()
 {
-    return ((temp_lsb >> 6) * 25);;
+    return (bcdToDec(temp_lsb) * 25);;
 }
 
 
