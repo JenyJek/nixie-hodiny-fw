@@ -9,9 +9,9 @@ struct DisplayBuffer {
     //nastaveni doutnavek tecek na hodinach, based on bity na uint8_t in 
     //(1bit - leva spodni tecka, 2bit - prava spodni tecka, 3-bit - vrchni tecky)
     void setDots(uint8_t in){
-        lowerLeftDot = (in >> 1) & 1;
-        lowerRightDot = (in >> 2) & 1;
-        upperDots = (in >> 3) & 1;
+        lowerLeftDot = in & 0x01;
+        lowerRightDot = in & 0x02;
+        upperDots = in & 0x04;
     }
 
     //tadyten push je tu jenom kvuli tomu aby se setril cas zpracovani
@@ -32,7 +32,7 @@ struct DisplayBuffer {
     volatile uint_fast8_t displayedHoursUnits;
     volatile uint_fast8_t displayedHoursTens;
 
-    uint_fast8_t lowerLeftDot, lowerRightDot, upperDots;
+    volatile uint_fast8_t lowerLeftDot, lowerRightDot, upperDots;
 };
 
 extern DisplayBuffer displayBuffer; //globalni buffer pro displej je extern - dostupny vsude, kde je #include displayBuffer.h

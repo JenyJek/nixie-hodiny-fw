@@ -132,7 +132,7 @@ void Display::rotateSeconds(){
         }
         else{
             bufferSecs--;
-            if(bufferSecs < 0) bufferSecs = this->slotToInvisible ? 0xA : 9;
+            if(bufferSecs < 0) bufferSecs = this->slotToInvisible ? 10 : 9;
             displayBuffer.digits[5] = bufferSecs; //vratit hodnotu do realneho bufferu
         }
     }
@@ -140,7 +140,7 @@ void Display::rotateSeconds(){
     bufferSecs = displayBuffer.digits[4]; //vypujcime si hodnotu desitek sekund
     if(this->digits[4] != bufferSecs){ //pokud actual desitky sekund nesedi s bufferem
         bufferSecs--;
-        if(bufferSecs < 0) bufferSecs = this->slotToInvisible ? 0xA : 9;
+        if(bufferSecs < 0) bufferSecs = this->slotToInvisible ? 10 : 9;
         displayBuffer.digits[4] = bufferSecs; //vratit hodnotu do realneho bufferu
     } 
     displayBuffer.Push();//nasypat z bufferu na realne vystupy
@@ -152,48 +152,48 @@ void Display::rotateMinutesHours(){
     int8_t buffer = displayBuffer.digits[3]; //vypujcime si hodnotu jednotek minut
     if(forceChange){ //force zmena hodnoty
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
     }
     if(this->digits[3] != buffer){ //pokud actual jednotky minut nesedi s bufferem
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.digits[3] = buffer; //vratit hodnotu do realneho bufferu
     }
     //desitky minut jsou [2]
     buffer = displayBuffer.digits[2]; //vypujcime si hodnotu desitek minut
     if(forceChange){ //force zmena hodnoty
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
     }
     if(this->digits[2] != buffer){ //pokud actual desitky minut nesedi s bufferem
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.digits[2] = buffer; //vratit hodnotu do realneho bufferu
     }
     //jednotky hodin jsou [1]
     buffer = displayBuffer.digits[1]; //vypujcime si hodnotu jednotek hodin
     if(forceChange){ //force zmena hodnoty
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
     }
     if(this->digits[1] != buffer){ //pokud actual jednotky hodin nesedi s bufferem
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.digits[1] = buffer; //vratit hodnotu do realneho bufferu
     }
     //desitky hodin jsou [0]
     buffer = displayBuffer.digits[0]; //vypujcime si hodnotu desitek hodin
     if(forceChange){ //force zmena hodnoty
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.forceChange = false; //zamerne nemenime hodnotu lokalniho forceChange, jinak by to fungovalo jenom pro jednu digit
     }
     if(this->digits[0] != buffer){ //pokud actual desitky hodin nesedi s bufferem
         buffer--;
-        if(buffer < 0) buffer = this->slotToInvisible ? 0xA : 9;
+        if(buffer < 0) buffer = this->slotToInvisible ? 10 : 9;
         displayBuffer.digits[0] = buffer; //vratit hodnotu do realneho bufferu
     }
     displayBuffer.Push();//nasypat z bufferu na realne vystupy

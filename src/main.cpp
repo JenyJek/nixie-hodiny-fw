@@ -11,12 +11,14 @@
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
 
-enum DMODE {MODE_TIME, MODE_DATE, MODE_TEMP, MODE_ALM_PRST, MODE_ALM_RUN};
+enum DMODE {MODE_TIME, MODE_DATE, MODE_ALM_PRST, MODE_TEMP, MODE_ALM_RUN};
 DMODE displaying;
 
 //nastavenicka tady
 const unsigned int autoModeToSecondsTime = 10000;
 const bool testSegments = false;
+const bool displayTemperature = false;
+bool doAlarm = true;
 
 
 void testAllSegments();
@@ -82,11 +84,11 @@ void setup() {
   rtc.setAlm();
 }
 
-uint64_t lastMillis, lastMillis2, lastMillis3, switchBackTime;
+uint64_t lastMillis0, lastMillis, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
 bool lastTouch;
 uint8_t anode, cathode = 0;
 uint8_t mode = 0;
-bool step, almRunning;
+bool radarActivated = true, almRunning;
 void loop(){
   toneMachine.loop();
   display.OnUpdate(); //zavolat update displeje
@@ -99,7 +101,7 @@ void loop(){
         rtc.read();
         //push from rtc to display
         display.slotToInvisible = false;
-        display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds);
+        display.fillDigits(rtc.hours, rtc.minutes, rtc.seconds, 0xFF);
         if(rtc.seconds == 0){
           displayBuffer.forceChange = true;
         }
@@ -108,24 +110,25 @@ void loop(){
         display.SetDots(display.DATE);
         rtc.read();
         display.slotToInvisible = false;
-        display.fillDigits(rtc.day, rtc.month, rtc.year);
+        display.fillDigits(rtc.day, rtc.month, rtc.year, 0xFF);
       }
       else if(displaying == MODE_TEMP){
         display.SetDots(display.TEMP);
         rtc.readTemp();
         display.slotToInvisible = true;
-        display.fillDigits(0xAA, rtc.getTemp(), rtc.getTempDecimalPart());
+        display.fillDigits(0xAA, rtc.getTemp(), rtc.getTempDecimalPart(), 0xF0);
       }
       else if(displaying == MODE_ALM_PRST){
         display.SetDots(display.ALARM_SET);
         display.slotToInvisible = true;
-        display.fillDigits(rtc.almhrs, rtc.almmins, 0xAA);
+        if(doAlarm) display.fillDigits(rtc.almhrs, rtc.almmins, 0xAA, 0x03);
+        else display.fillDigits(0xAA, 00, 0xAA, 0xF3);
       }
       else if(displaying == MODE_ALM_RUN){
         display.SetDots(display.ALARM_RUN);
         rtc.read();
         display.slotToInvisible = false;
-        display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds);
+        display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds, 0xFC);
       }
     }
     lastMillis = millis();
@@ -137,18 +140,40 @@ void loop(){
     //pro DEBUG
     if(lastTouch != touch.touched){
       if(touch.touched){
-        if(almRunning){
-          toneMachine.stop();
-          toneMachine.play(melodies.okSfxMelody);
-          displaying = MODE_TIME;
-          almRunning = false;
-          rtc.clearAlm();
-        }else{
-          toneMachine.play(melodies.hapticMelody);
-          switchBackTime = millis();
-          displaying = (DMODE)(displaying + 1);
-          if(displaying >= MODE_ALM_RUN) displaying = MODE_TIME;
-        }      
+        touchPressedTime = millis();
+        if(radarActivated){
+          if(almRunning){
+            toneMachine.stop();
+            toneMachine.play(melodies.okSfxMelody);
+            displaying = MODE_TIME;
+            almRunning = false;
+            rtc.clearAlm();
+          }else{
+            toneMachine.play(melodies.hapticMelody);
+            switchBackTime = millis();
+            displaying = (DMODE)(displaying + 1);
+            if(displaying >= (displayTemperature ? MODE_ALM_RUN : MODE_TEMP)) displaying = MODE_TIME;
+          } 
+        }
+        else{
+          radarActivated = true;
+        }     
+      }
+      else{
+        //release
+        if(millis() - touchPressedTime >= 2000){
+          //trigger budiku
+          if(doAlarm){
+            doAlarm = false;
+            toneMachine.play(melodies.forbiddenSfxMelody);
+            toneMachine.play(melodies.forbiddenSfxMelody);
+          }
+          else{
+            doAlarm = true;
+            toneMachine.play(melodies.okSfxMelody);
+            toneMachine.play(melodies.okSfxMelody);
+          }
+        }
       } 
       lastTouch = touch.touched;
     }
@@ -156,13 +181,18 @@ void loop(){
   }
 
   if(millis() - lastMillis3 >= 1000){ //alarm, budik
-    if(rtc.getAlm2Flag() && !almRunning){
+
+    if(!doAlarm && rtc.getAlm2Flag()){
+      rtc.clearAlm();
+    }
+    else if(rtc.getAlm2Flag() && !almRunning){
       displaying = MODE_ALM_RUN;
       toneMachine.currentMelody = melodies.alarmMelody;
       toneMachine.play();
       almRunning = true;
     }
   }
+  
   if(millis() - switchBackTime >= autoModeToSecondsTime){ //auto prepinani DMODu zpet na cas
     if(!displaying == MODE_TIME) displaying = MODE_TIME;
   }
