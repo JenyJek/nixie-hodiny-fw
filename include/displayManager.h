@@ -56,6 +56,9 @@ struct Display {
         void TurnOff(){
             currentAnimState = FLY_OUT;
         }
+        bool IsOn(){
+            return currentAnimState == STATIC;
+        }
 
         uint8_t digits[6];
 

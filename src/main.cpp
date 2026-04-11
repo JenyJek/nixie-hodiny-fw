@@ -16,8 +16,9 @@ DMODE displaying;
 
 //nastavenicka tady
 const unsigned int autoModeToSecondsTime = 10000;
+const uint16_t turnOffAfterRadarTime = 25000;
 const bool testSegments = false;
-const bool displayTemperature = false;
+const bool displayTemperature = true;
 bool doAlarm = true;
 
 
@@ -71,7 +72,7 @@ void setup() {
   rtc.initAlm1();
   Serial.println("startup done");
   displaying = MODE_TIME;
-  display.TurnOn();
+  display.TurnOff();
   toneMachine.currentMelody = melodies.okSfxMelody;
   if(testSegments) testAllSegments();
   toneMachine.play();
@@ -84,15 +85,16 @@ void setup() {
   rtc.setAlm();
 }
 
-uint64_t lastMillis0, lastMillis, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
+uint64_t lastMillis, lastMillis1, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
 bool lastTouch;
 uint8_t anode, cathode = 0;
 uint8_t mode = 0;
-bool radarActivated = true, almRunning;
+bool radarActivated = false, almRunning;
 void loop(){
+  uint64_t _millis = millis();
   toneMachine.loop();
   display.OnUpdate(); //zavolat update displeje
-  if(millis() - lastMillis >= 50){ //zobrazovani na displej
+  if(_millis - lastMillis >= 50 && radarActivated){ //zobrazovani na displej
     if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
       rtc.read();
@@ -131,16 +133,25 @@ void loop(){
         display.fillDigits(rtc.almhrs, rtc.almmins, rtc.seconds, 0xFC);
       }
     }
-    lastMillis = millis();
+    lastMillis = _millis;
   }
 
-  if(millis() - lastMillis2 >= 25){ //detekce dotyku, ruseni alarmu a prepinani DMODu
+  if(_millis - lastMillis1 >= 10){ //detekce radaru (v pozdejsi verzi by melo jit o Wake-on-interrupt)
+    if(digitalRead(PIN_RADAR) && !radarActivated){
+      radarActivated = true;
+      if(!display.IsOn()) display.TurnOn();
+      radarOffBackTime = _millis;
+    }
+    Serial.print(digitalRead(PIN_RADAR));
+  }
+
+  if(_millis - lastMillis2 >= 25){ //detekce dotyku, ruseni alarmu a prepinani DMODu
     touch.Read();
 
     //pro DEBUG
     if(lastTouch != touch.touched){
       if(touch.touched){
-        touchPressedTime = millis();
+        touchPressedTime = _millis;
         if(radarActivated){
           if(almRunning){
             toneMachine.stop();
@@ -150,19 +161,21 @@ void loop(){
             rtc.clearAlm();
           }else{
             toneMachine.play(melodies.hapticMelody);
-            switchBackTime = millis();
+            switchBackTime = _millis;
             displaying = (DMODE)(displaying + 1);
-            //if(displaying >= (displayTemperature ? MODE_ALM_RUN : MODE_TEMP)) displaying = MODE_TIME;
-            if(displaying >= MODE_TEMP) displaying = MODE_TIME;
+            if(displaying >= (displayTemperature ? MODE_ALM_RUN : MODE_TEMP)) displaying = MODE_TIME;
+            //if(displaying >= MODE_TEMP) displaying = MODE_TIME;
           } 
         }
         else{
           radarActivated = true;
+          if(!display.IsOn()) display.TurnOn();
+          radarOffBackTime = _millis;
         }     
       }
       else{
         //release
-        if(millis() - touchPressedTime >= 1000){
+        if(_millis - touchPressedTime >= 1000){
           //trigger budiku
           if(doAlarm){
             doAlarm = false;
@@ -178,15 +191,19 @@ void loop(){
       } 
       lastTouch = touch.touched;
     }
-    lastMillis2 = millis();
+    lastMillis2 = _millis;
   }
 
-  if(millis() - lastMillis3 >= 1000){ //alarm, budik
+  if(_millis - lastMillis3 >= 1000){ //alarm, budik
 
     if(!doAlarm && rtc.getAlm2Flag()){
       rtc.clearAlm();
     }
     else if(rtc.getAlm2Flag() && !almRunning){
+      radarActivated = true;
+      if(!display.IsOn()) display.TurnOn();
+      radarOffBackTime = _millis;
+
       displaying = MODE_ALM_RUN;
       toneMachine.currentMelody = melodies.alarmMelody;
       toneMachine.play();
@@ -194,9 +211,15 @@ void loop(){
     }
   }
   
-  if(millis() - switchBackTime >= autoModeToSecondsTime){ //auto prepinani DMODu zpet na cas
+  if(_millis - switchBackTime >= autoModeToSecondsTime){ //auto prepinani DMODu zpet na cas
     if(!displaying == MODE_TIME) displaying = MODE_TIME;
   }
+
+  if(_millis - radarOffBackTime >= turnOffAfterRadarTime){
+    radarActivated = false;
+    if(display.IsOn()) display.TurnOff();
+  }
+
 }
 
 void testAllSegments() {
