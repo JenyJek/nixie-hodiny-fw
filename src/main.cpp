@@ -152,7 +152,8 @@ void loop(){
             toneMachine.play(melodies.hapticMelody);
             switchBackTime = millis();
             displaying = (DMODE)(displaying + 1);
-            if(displaying >= (displayTemperature ? MODE_ALM_RUN : MODE_TEMP)) displaying = MODE_TIME;
+            //if(displaying >= (displayTemperature ? MODE_ALM_RUN : MODE_TEMP)) displaying = MODE_TIME;
+            if(displaying >= MODE_TEMP) displaying = MODE_TIME;
           } 
         }
         else{
@@ -161,7 +162,7 @@ void loop(){
       }
       else{
         //release
-        if(millis() - touchPressedTime >= 2000){
+        if(millis() - touchPressedTime >= 1000){
           //trigger budiku
           if(doAlarm){
             doAlarm = false;
