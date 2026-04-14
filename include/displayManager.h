@@ -1,5 +1,7 @@
 #pragma once
 #include <Arduino.h>
+#include <mainGlobals.h>
+
 struct Display {
     private:
         // promenne pro animace

@@ -9,6 +9,7 @@
 #include <melodies.h>
 #include <SerialComms.h>
 #include <presetMemory.h>
+#include <mainGlobals.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
@@ -17,10 +18,10 @@ enum DMODE {MODE_TIME, MODE_DATE, MODE_ALM_PRST, MODE_TEMP, MODE_ALM_RUN};
 DMODE displaying;
 
 //nastavenicka tady
-unsigned int autoModeToSecondsTime = 10000;
-uint16_t turnOffAfterRadarTime = 25000;
-bool testSegments = false;
-bool displayTemperature = true;
+uint32_t autoModeToSecondsTime;
+uint16_t turnOffAfterRadarTime;
+bool testSegments;
+bool displayTemperature;
 
 bool doAlarm = true;
 
@@ -93,11 +94,13 @@ void setup() {
   serialLine.answerOk();
 
 //for debug purpose
-  rtc.setTime(0,34,12);
-  rtc.setDate(10, 4, 26, 4);
-  rtc.almmins = 35;
-  rtc.almhrs = 12;
-  rtc.setAlm();
+  if(!rtc.getStopFlag()){
+    rtc.setTime(0,0,12);
+    rtc.setDate(1, 1, 7, 1);
+    rtc.almmins = 0;
+    rtc.almhrs = 0;
+    rtc.setAlm();
+  }
 }
 
 uint64_t lastMillis, lastMillis1, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
@@ -107,6 +110,7 @@ void loop(){
   uint64_t _millis = millis();
   toneMachine.loop();
   display.OnUpdate(); //zavolat update displeje
+  serialLine.update();
   if(_millis - lastMillis >= 50 && radarActivated){ //zobrazovani na displej
     if(rtc.getAlm1FlagTrigger()){
       // on alm1 trg flag
@@ -155,7 +159,7 @@ void loop(){
       if(!display.IsOn()) display.TurnOn();
       radarOffBackTime = _millis;
     }
-    Serial.print(digitalRead(PIN_RADAR));
+    //Serial.print(digitalRead(PIN_RADAR));
   }
 
   if(_millis - lastMillis2 >= 25){ //detekce dotyku, ruseni alarmu a prepinani DMODu

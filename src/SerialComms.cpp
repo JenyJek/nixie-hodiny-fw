@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SerialComms.h>
 
-#include <main.cpp>
+#include <mainGlobals.h>
 #include <presetMemory.h>
 #include <touch.h>
 #include <rtc.h>
