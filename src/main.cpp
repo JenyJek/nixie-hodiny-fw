@@ -32,12 +32,12 @@ void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
   serialLine.setup();
   //vytahni data z eeprom
-  /*PresetMemory::mainConfigManagerPreset data = presetMemory.getMainConfigManagerPreset();
+  PresetMemory::mainConfigManagerPreset data = presetMemory.getMainConfigManagerPreset();
   //a nasyp je do nastavovacich kokotin
   autoModeToSecondsTime = data.autoModeToSecondsTime;
   turnOffAfterRadarTime = data.turnOffAfterRadarTime;
   testSegments = data.testSegments;
-  displayTemperature = data.displayTemperature;*/
+  displayTemperature = data.displayTemperature;
   //to same pro almSound
   melodies.setup(); //inicializace melodii
   //pro touch
