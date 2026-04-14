@@ -20,6 +20,7 @@ void Display::stepAnimation(){
                 }
                 //zapnut HV (jinak uvidime prdlajs)
                 digitalWrite(PIN_HV_MOS, HIGH);
+                display.isOn = true;
                 animStep++;
             break;
             case 1: //actual time 12:34:56 - display  6-:--:--
@@ -113,6 +114,7 @@ void Display::stepAnimation(){
                 animStep=0;
                 //vypni HV (setrime energii)
                 digitalWrite(PIN_HV_MOS, LOW);
+                display.isOn = false;
                 this->currentAnimState = OFF;
             break;
         }

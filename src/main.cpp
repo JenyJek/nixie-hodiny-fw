@@ -92,15 +92,6 @@ void setup() {
   if(testSegments) testAllSegments();
   toneMachine.play();
   serialLine.answerOk();
-
-//for debug purpose
-  if(!rtc.getStopFlag()){
-    rtc.setTime(0,0,12);
-    rtc.setDate(1, 1, 7, 1);
-    rtc.almmins = 0;
-    rtc.almhrs = 0;
-    rtc.setAlm();
-  }
 }
 
 uint64_t lastMillis, lastMillis1, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
@@ -154,12 +145,14 @@ void loop(){
   }
 
   if(_millis - lastMillis1 >= 10){ //detekce radaru (v pozdejsi verzi by melo jit o Wake-on-interrupt)
-    if(digitalRead(PIN_RADAR) && !radarActivated){
-      radarActivated = true;
-      if(!display.IsOn()) display.TurnOn();
+    if(digitalRead(PIN_RADAR)){
+      if(!radarActivated){
+        radarActivated = true;
+        if(/*!display.IsOn()*/true) display.TurnOn();
+        Serial.println(F("turning on"));
+      }
       radarOffBackTime = _millis;
     }
-    //Serial.print(digitalRead(PIN_RADAR));
   }
 
   if(_millis - lastMillis2 >= 25){ //detekce dotyku, ruseni alarmu a prepinani DMODu
@@ -232,9 +225,10 @@ void loop(){
     if(!displaying == MODE_TIME) displaying = MODE_TIME;
   }
 
-  if(_millis - radarOffBackTime >= turnOffAfterRadarTime){
+  if(_millis - radarOffBackTime >= turnOffAfterRadarTime && radarActivated){
     radarActivated = false;
-    if(display.IsOn()) display.TurnOff();
+    Serial.println(F("turning off"));
+    if(/*display.IsOn()*/true) display.TurnOff();
   }
 
 }

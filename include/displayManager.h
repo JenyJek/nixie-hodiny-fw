@@ -12,6 +12,7 @@ struct Display {
         //helper funkce
         void rotateSeconds(), rotateMinutesHours();
         void stepAnimation();
+        bool isOn;
     public:
         //nastavenicko
         bool slotSecondsUnits = false;
@@ -59,7 +60,7 @@ struct Display {
             currentAnimState = FLY_OUT;
         }
         bool IsOn(){
-            return currentAnimState == STATIC;
+            return isOn;
         }
         void setup();
         uint8_t digits[6];

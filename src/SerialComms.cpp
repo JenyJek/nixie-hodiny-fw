@@ -463,7 +463,7 @@ void SerialLine::saveToEeprom(){
 void SerialLine::resetToDefault(){
   PresetMemory::mainConfigManagerPreset MainData;
   MainData.autoModeToSecondsTime = 10000;
-  MainData.turnOffAfterRadarTime = 2500;
+  MainData.turnOffAfterRadarTime = 30000;
   MainData.testSegments = true;
   MainData.displayTemperature = false;
   presetMemory.pushMainConfigManagerPreset(MainData);
