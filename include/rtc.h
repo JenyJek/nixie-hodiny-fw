@@ -2,13 +2,13 @@
 #include <Arduino.h>
 class Rtc
 {
-    public:
-    uint8_t address;
-    uint8_t decToBcd(uint8_t decimal);
-    uint8_t bcdToDec(uint8_t bcd);
+    private:
     uint8_t getStatusRegister();
     uint8_t temp_msb, temp_lsb;
+    uint8_t decToBcd(uint8_t decimal);
+    uint8_t bcdToDec(uint8_t bcd);
     public:
+    uint8_t address; 
     //funny
     uint8_t minutes, hours, seconds, day, month, year, almmins, almhrs;
     enum dayOfWeek{NAD, SUN, MON, TUE, WED, THU, FRI, SAT}; //NAD: not a day, rtc funguje na 1-7, ne 0-6.
@@ -41,6 +41,9 @@ class Rtc
     //gettery na teplotu
     uint8_t getTemp();
     uint8_t getTempDecimalPart();
+
+    bool getStopFlag();
+    void resetStopFlag();
 };
 
 

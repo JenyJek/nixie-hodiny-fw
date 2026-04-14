@@ -14,6 +14,7 @@ void Rtc::setTime(uint8_t secs, uint8_t mins, uint8_t hrs){
     Wire.write(decToBcd(mins) & 0x7F);
     Wire.write(decToBcd(hrs) & 0x3F);
     Wire.endTransmission();
+    if(this->getStopFlag()) this ->resetStopFlag();
 }
 
 void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
@@ -24,6 +25,7 @@ void Rtc::setDate(uint8_t day, uint8_t month, uint8_t year, uint8_t dow){
     Wire.write(decToBcd(month) & 0x1F);
     Wire.write(decToBcd(year));
     Wire.endTransmission();
+    if(this->getStopFlag()) this ->resetStopFlag();
 }
 
 //nastaveni alarmu A2 - uzivatelem nastavitelny budik
@@ -125,6 +127,19 @@ uint8_t Rtc::getTempDecimalPart()
     return (bcdToDec(temp_lsb) * 25);;
 }
 
+
+bool Rtc::getStopFlag(){
+    return this->getStatusRegister() & 0x80;
+}
+
+void Rtc::resetStopFlag(){
+    uint8_t statusReg = this->getStatusRegister(); //get valof status reg
+    statusReg &= ~0x80;//clear bit 8 msb
+    Wire.beginTransmission(this->address);
+    Wire.write(0x0F); // status register
+    Wire.write(statusReg); //put back
+    Wire.endTransmission();
+}
 
 uint8_t Rtc::decToBcd(uint8_t decimal){
     return ( (decimal/10*16) + (decimal%10) );

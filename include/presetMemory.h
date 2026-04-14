@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
 
+#include <melodies.h>
+
 struct PresetMemory{
     private:
     public:
@@ -33,7 +35,7 @@ struct PresetMemory{
         touchPreset getTouchPreset();
     // pro almSound
         struct almSoundPreset{
-            char melody[32];
+            Melody almMelody;
         };
         void pushAlmSoundPreset(almSoundPreset val);
         almSoundPreset getAlmSoundPreset();

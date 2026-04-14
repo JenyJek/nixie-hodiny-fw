@@ -2,6 +2,8 @@
 #include <presetMemory.h>
 #include <EEPROM.h>
 
+#include <melodies.h>
+
 // EEPROM layout offsets
 static constexpr int EEPROM_ADDR_DBUF_PRST = 0;
 static constexpr int EEPROM_ADDR_DISPLAY_MANAGER = EEPROM_ADDR_DBUF_PRST + sizeof(PresetMemory::displayBufferPreset);
