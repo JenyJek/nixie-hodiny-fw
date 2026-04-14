@@ -7,6 +7,8 @@
 #include <touch.h>
 #include <almSound.h>
 #include <melodies.h>
+#include <SerialComms.h>
+#include <presetMemory.h>
 
 DisplayBuffer displayBuffer; //actual deklarace globalniho bufferu pro displej
 Rtc rtc(0x68); //inicializace RTC s I2C adresou 0x68
@@ -15,10 +17,11 @@ enum DMODE {MODE_TIME, MODE_DATE, MODE_ALM_PRST, MODE_TEMP, MODE_ALM_RUN};
 DMODE displaying;
 
 //nastavenicka tady
-const unsigned int autoModeToSecondsTime = 10000;
-const uint16_t turnOffAfterRadarTime = 25000;
-const bool testSegments = false;
-const bool displayTemperature = true;
+unsigned int autoModeToSecondsTime = 10000;
+uint16_t turnOffAfterRadarTime = 25000;
+bool testSegments = false;
+bool displayTemperature = true;
+
 bool doAlarm = true;
 
 
@@ -26,8 +29,20 @@ void testAllSegments();
 
 void setup() {
   // setup se spousti pouze jednou, pri spusteni MCU (reset, napajeni apod.)
-  Serial.begin(115200); //inicializuj seriovou linku s rychlosti 115200baud
-  initMelodies(); //inicializace melodii
+  serialLine.setup();
+  //vytahni data z eeprom
+  /*PresetMemory::mainConfigManagerPreset data = presetMemory.getMainConfigManagerPreset();
+  //a nasyp je do nastavovacich kokotin
+  autoModeToSecondsTime = data.autoModeToSecondsTime;
+  turnOffAfterRadarTime = data.turnOffAfterRadarTime;
+  testSegments = data.testSegments;
+  displayTemperature = data.displayTemperature;*/
+  //to same pro almSound
+  melodies.setup(); //inicializace melodii
+  //pro touch
+  touch.setup(PIN_TOUCH); //nastavenicko captouch s defaultnima hodnotama
+  //pro displayManager
+  display.setup();
 
   //nastaveni modu GPIO
   pinMode(PIN_MH141_A1, OUTPUT);
@@ -60,7 +75,7 @@ void setup() {
   TIMSK1 |= (1 << OCIE1A);  // zapnout funkci timer compare
   interrupts(); //zapnout zpet vsechny interrupty
 
-  touch.Setup(PIN_TOUCH, 100, 40, 8); //nastavenicko captouch s defaultnima hodnotama
+  
 
   for(uint8_t digit : displayBuffer.digits){//nasypat do bufferu nuly abysme meli definovano co zobrazovat
     displayBuffer.digits[digit] = 0;
@@ -70,12 +85,12 @@ void setup() {
   display.OnUpdate();
   Wire.begin();
   rtc.initAlm1();
-  Serial.println("startup done");
   displaying = MODE_TIME;
   display.TurnOff();
   toneMachine.currentMelody = melodies.okSfxMelody;
   if(testSegments) testAllSegments();
   toneMachine.play();
+  serialLine.answerOk();
 
 //for debug purpose
   rtc.setTime(0,34,12);
@@ -87,8 +102,6 @@ void setup() {
 
 uint64_t lastMillis, lastMillis1, lastMillis2, lastMillis3, switchBackTime, radarOffBackTime, touchPressedTime;
 bool lastTouch;
-uint8_t anode, cathode = 0;
-uint8_t mode = 0;
 bool radarActivated = false, almRunning;
 void loop(){
   uint64_t _millis = millis();

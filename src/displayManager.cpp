@@ -6,6 +6,7 @@
 #include <displayBuffer.h>
 #include <displayManager.h>
 #include <pins.h>
+#include <presetMemory.h>
 
 Display display;
 
@@ -224,4 +225,12 @@ void Display::OnUpdate(){
     }else if(this->currentMode == NONE){
         lastDoubleDotOnMillis = currentMillis;
     }
+}
+
+void Display::setup(){
+    PresetMemory::displayManagerPreset data = presetMemory.getDisplayManagerPreset();
+    animUpdateInterval = data.animUpdateInterval;
+    rotateSecondsInterval = data.rotateSecondsInterval;
+    rotateMinutesHoursInterval = data.rotateMinutesHoursInterval;
+    doubleDotOnTime = data.doubleDotOnTime;
 }

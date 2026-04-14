@@ -11,6 +11,7 @@ struct Melody {
 
 struct Melodies{
     public:
+    void setup();
     Melody alarmMelody;
     Melody okSfxMelody;
     Melody forbiddenSfxMelody;
@@ -19,4 +20,4 @@ struct Melodies{
 
 extern Melodies melodies;
 
-void initMelodies();
+

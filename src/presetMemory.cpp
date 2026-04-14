@@ -6,18 +6,18 @@
 
 // EEPROM layout offsets
 static constexpr int EEPROM_ADDR_DBUF_PRST = 0;
-static constexpr int EEPROM_ADDR_DISPLAY_MANAGER = EEPROM_ADDR_DBUF_PRST + sizeof(PresetMemory::displayBufferPreset);
+static constexpr int EEPROM_ADDR_DISPLAY_MANAGER = EEPROM_ADDR_DBUF_PRST + sizeof(PresetMemory::mainConfigManagerPreset);
 static constexpr int EEPROM_ADDR_TOUCH = EEPROM_ADDR_DISPLAY_MANAGER + sizeof(PresetMemory::displayManagerPreset);
 static constexpr int EEPROM_ADDR_ALM_SOUND = EEPROM_ADDR_TOUCH + sizeof(PresetMemory::touchPreset);
 
 PresetMemory presetMemory;
 
-void PresetMemory::pushDisplayBufferPreset (displayBufferPreset val) {
+void PresetMemory::pushMainConfigManagerPreset (mainConfigManagerPreset val) {
     EEPROM.put(EEPROM_ADDR_DBUF_PRST, val);
 }
 
-PresetMemory::displayBufferPreset PresetMemory::getDisplayBufferPreset () {
-    displayBufferPreset val;
+PresetMemory::mainConfigManagerPreset PresetMemory::getMainConfigManagerPreset () {
+    mainConfigManagerPreset val;
     EEPROM.get(EEPROM_ADDR_DBUF_PRST, val);
     return val;
 }

@@ -1,7 +1,19 @@
 #include <Arduino.h>
 #include <touch.h>
+#include <presetMemory.h>
 
 Touch touch;
+
+void Touch::setup(uint8_t adcChannel){
+    PresetMemory::touchPreset data = presetMemory.getTouchPreset();
+    this->ADCChannel = adcChannel;
+    this->samples = data.samples;
+    this->threshold = data.treshold;
+    this->alpha = data.alpha;
+    this->baseline = 0;
+    this->baselineInit = false;
+    this->prevTouched = false;
+}
 
 void Touch::Read()
 {

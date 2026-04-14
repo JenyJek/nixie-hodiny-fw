@@ -1,6 +1,13 @@
 #include <Arduino.h>
 #include <SerialComms.h>
 
+#include <main.cpp>
+#include <presetMemory.h>
+#include <touch.h>
+#include <rtc.h>
+#include <melodies.h>
+#include <displayManager.h>
+
 SerialLine serialLine;
 
 void SerialLine::update(){
@@ -37,8 +44,9 @@ void SerialLine::update(){
           uint8_t utempH = (uint8_t)tempH, utempM = (uint8_t)tempM, utempS = (uint8_t)tempS;
           //sanitize
           if(utempH < 23 && utempM < 60 && utempS < 60){
-            sprintf(buffer, "%02d:%02d:%02d-", utempH, utempM, utempS);
-            Serial.print(buffer);
+            //sprintf(buffer, "%02d:%02d:%02d-", utempH, utempM, utempS);
+            //Serial.print(buffer);
+            rtc.setTime(utempS, utempM, utempH);
             this->answerOk();
           }
           else{
@@ -56,8 +64,9 @@ void SerialLine::update(){
           //sanitize
           if(utempM <= 12 && utempY <= 99){
             if(utempD <= this->getMaxDays(utempM, utempY)){
-              sprintf(buffer, "%02d.%02d %02d-", utempD, utempM, utempY + 2000);
-              Serial.print(buffer);
+              //sprintf(buffer, "%02d.%02d %02d-", utempD, utempM, utempY + 2000);
+              //Serial.print(buffer);
+              rtc.setDate(utempD, utempM, utempY, this->getDayOfWeek(utempD, utempM, utempY));
               this->answerOk();
             }
             else{
@@ -77,8 +86,11 @@ void SerialLine::update(){
           uint8_t utempH = (uint8_t)tempH, utempM = (uint8_t)tempM;
           //sanitize
           if(utempH < 23 && utempM < 60){
-            sprintf(buffer, "%02d:%02d-", utempH, utempM);
-            Serial.print(buffer);
+            //sprintf(buffer, "%02d:%02d-", utempH, utempM);
+            //Serial.print(buffer);
+            rtc.almhrs = utempH;
+            rtc.almmins = utempM;
+            rtc.setAlm();
             this->answerOk();
           }
           else{
@@ -89,16 +101,18 @@ void SerialLine::update(){
 
         case CONF_DISPL_TEMP: {
           bool temp = (bool)atoi(dataPtr);
-          Serial.print(temp);
-          Serial.print('-');
+          //Serial.print(temp);
+          //Serial.print('-');
+          displayTemperature = temp;
           this->answerOk();
           break;
         }
 
         case CONF_TEST_SEGMENTS: {
           bool temp = (bool)atoi(dataPtr);
-          Serial.print(temp);
-          Serial.print('-');
+          //Serial.print(temp);
+          //Serial.print('-');
+          testSegments = temp;
           this->answerOk();
           break;
         }
@@ -110,8 +124,9 @@ void SerialLine::update(){
           }
           else{
             uint8_t temp = (uint8_t)tempT;
-            Serial.print(tempT);
-            Serial.print('-');
+            //Serial.print(tempT);
+            //Serial.print('-');
+            turnOffAfterRadarTime = 1000*temp;
             this->answerOk();
           }
           break;
@@ -124,8 +139,9 @@ void SerialLine::update(){
           }
           else{
             uint8_t temp = (uint8_t)tempT;
-            Serial.print(temp);
-            Serial.print('-');
+            //Serial.print(temp);
+            //Serial.print('-');
+            autoModeToSecondsTime = 1000*temp;
             this->answerOk();
           }
           break;
@@ -133,25 +149,27 @@ void SerialLine::update(){
 
         case TOUCH_SET_SAMPLES: {
           uint16_t tempT = (uint16_t)atoi(dataPtr);
-          if(tempT >= 250){
+          if(tempT >= 1000){
             this->throwError(E_INVALID_DATA);
           }
           else{
-            Serial.print(tempT);
-            Serial.print('-');
+            touch.samples = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
             this->answerOk();
           }
           break;
         }
 
         case TOUCH_SET_THRESHOLD: {
-          uint16_t tempT = (uint16_t)atoi(dataPtr);
+          uint8_t tempT = (uint8_t)atoi(dataPtr);
           if(tempT >= 250){
             this->throwError(E_INVALID_DATA);
           }
           else{
-            Serial.print(tempT);
-            Serial.print('-');
+            touch.threshold = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
             this->answerOk();
           }
           break;
@@ -159,12 +177,13 @@ void SerialLine::update(){
 
         case TOUCH_SET_ALPHA: {
           uint16_t tempT = (uint16_t)atoi(dataPtr);
-          if(tempT >= 250){
+          if(tempT >= 25){
             this->throwError(E_INVALID_DATA);
           }
           else{
-            Serial.print(tempT);
-            Serial.print('-');
+            touch.alpha = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
             this->answerOk();
           }
           break;
@@ -175,10 +194,11 @@ void SerialLine::update(){
           // Find the melody part (everything after the comma)
           char* melodyPtr = strchr(dataPtr, ';') + 1;
           if(isValidMelody(melodyPtr)&&interval > 0){
-            Serial.print(melodyPtr);
-            Serial.print(" at bpm: ");
-            Serial.print(interval);
-            Serial.print("-");
+            melodies.alarmMelody = {melodyPtr, interval, false};
+            //Serial.print(melodyPtr);
+            //Serial.print(" at bpm: ");
+            //Serial.print(interval);
+            //Serial.print("-");
             this->answerOk();
           }else{
             this->throwError(E_INVALID_DATA);
@@ -191,10 +211,11 @@ void SerialLine::update(){
           // Find the melody part (everything after the comma)
           char* melodyPtr = strchr(dataPtr, ';') + 1;
           if(isValidMelody(melodyPtr)&&interval > 0){
-            Serial.print(melodyPtr);
-            Serial.print(" at bpm: ");
-            Serial.print(interval);
-            Serial.print("-");
+            melodies.okSfxMelody = {melodyPtr, interval, true};
+            //Serial.print(melodyPtr);
+            //Serial.print(" at bpm: ");
+            //Serial.print(interval);
+            //Serial.print("-");
             this->answerOk();
           }else{
             this->throwError(E_INVALID_DATA);
@@ -207,13 +228,79 @@ void SerialLine::update(){
           // Find the melody part (everything after the comma)
           char* melodyPtr = strchr(dataPtr, ';') + 1;
           if(isValidMelody(melodyPtr)&&interval > 0){
-            Serial.print(melodyPtr);
-            Serial.print(" at bpm: ");
-            Serial.print(interval);
-            Serial.print("-");
+            melodies.forbiddenSfxMelody = {melodyPtr, interval, true};
+            //Serial.print(melodyPtr);
+            //Serial.print(" at bpm: ");
+            //Serial.print(interval);
+            //Serial.print("-");
             this->answerOk();
           }else{
             this->throwError(E_INVALID_DATA);
+          }
+          break;
+        }
+
+        case DISPLAY_SLOT_SECONDS: {
+          bool temp = (bool)atoi(dataPtr);
+          //Serial.print(temp);
+          //Serial.print('-');
+          display.slotSecondsUnits = temp;
+          this->answerOk();
+          break;
+        }
+
+        case DISPLAY_ANIM_UPDATE: {
+          uint8_t tempT = (uint8_t)atoi(dataPtr);
+          if(tempT >= 250){
+            this->throwError(E_INVALID_DATA);
+          }
+          else{
+            display.animUpdateInterval = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
+            this->answerOk();
+          }
+          break;
+        }
+
+        case DISPLAY_SECS_UPDATE: {
+          uint8_t tempT = (uint8_t)atoi(dataPtr);
+          if(tempT >= 250){
+            this->throwError(E_INVALID_DATA);
+          }
+          else{
+            display.rotateSecondsInterval = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
+            this->answerOk();
+          }
+          break;
+        }
+
+        case DISPLAY_MINS_UPDATE: {
+          uint8_t tempT = (uint8_t)atoi(dataPtr);
+          if(tempT >= 250){
+            this->throwError(E_INVALID_DATA);
+          }
+          else{
+            display.rotateMinutesHoursInterval = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
+            this->answerOk();
+          }
+          break;
+        }
+
+        case DISPLAY_DOT_ONTIME: {
+          uint16_t tempT = (uint16_t)atoi(dataPtr);
+          if(tempT > 800){
+            this->throwError(E_INVALID_DATA);
+          }
+          else{
+            display.doubleDotOnTime = tempT;
+            //Serial.print(tempT);
+            //Serial.print('-');
+            this->answerOk();
           }
           break;
         }
@@ -224,7 +311,14 @@ void SerialLine::update(){
         }
 
         case SAVE_CMD:{
-          this->throwError(E_FAILED);
+          this->saveToEeprom();
+          this->answerOk();
+          break;
+        }
+
+        case FACTORY_RESET_CMD:{
+          this->resetToDefault();
+          this->answerOk();
           break;
         }
 
@@ -316,4 +410,81 @@ bool SerialLine::isValidMelody(char* str) {
   }
 
   return true;
+}
+
+uint8_t SerialLine::getDayOfWeek(uint8_t d, uint8_t m, uint8_t y2d) {
+  // y2d is the 2-digit year (e.g., 26 for 2026)
+  // Adjust month and year for the formula (March becomes month 3, Feb is 14 of prev year)
+  if (m < 3) {
+    m += 12;
+    y2d -= 1;
+  }
+
+  // Sakamoto's Algorithm / Zeller variation for the 21st Century
+  // (d + y + y/4 + (31*m)/12) % 7
+  // We add 2000 logic specifically for the offset
+  int y = 2000 + y2d;
+  int dow = (d + y + y/4 - y/100 + y/400 + (31*m)/12) % 7;
+
+  // The formula returns 0 for Sunday, 1 for Monday... 
+  // To return 1-7:
+  return dow + 1;
+}
+
+void SerialLine::saveToEeprom(){
+  PresetMemory::mainConfigManagerPreset MainData;
+  MainData.autoModeToSecondsTime = autoModeToSecondsTime;
+  MainData.turnOffAfterRadarTime = turnOffAfterRadarTime;
+  MainData.testSegments = testSegments;
+  MainData.displayTemperature = displayTemperature;
+  presetMemory.pushMainConfigManagerPreset(MainData);
+
+  PresetMemory::displayManagerPreset DMGRData;
+  DMGRData.slotSecondsUnits = display.slotSecondsUnits;
+  DMGRData.animUpdateInterval = display.animUpdateInterval;
+  DMGRData.rotateSecondsInterval = display.rotateSecondsInterval;
+  DMGRData.rotateMinutesHoursInterval = display.rotateMinutesHoursInterval;
+  DMGRData.doubleDotOnTime = display.doubleDotOnTime;
+  presetMemory.pushDisplayManagerPreset(DMGRData);
+
+  PresetMemory::touchPreset TouchData;
+  TouchData.samples = touch.samples;
+  TouchData.treshold = touch.threshold;
+  TouchData.alpha = touch.alpha;
+  presetMemory.pushTouchPreset(TouchData);
+
+  PresetMemory::almSoundPreset MelodyData;
+  MelodyData.almMelody = melodies.alarmMelody;
+  MelodyData.okSfxMelody = melodies.okSfxMelody;
+  MelodyData.errSfxMelody = melodies.forbiddenSfxMelody;
+  presetMemory.pushAlmSoundPreset(MelodyData);
+}
+
+void SerialLine::resetToDefault(){
+  PresetMemory::mainConfigManagerPreset MainData;
+  MainData.autoModeToSecondsTime = 10000;
+  MainData.turnOffAfterRadarTime = 2500;
+  MainData.testSegments = true;
+  MainData.displayTemperature = false;
+  presetMemory.pushMainConfigManagerPreset(MainData);
+
+  PresetMemory::displayManagerPreset DMGRData;
+  DMGRData.slotSecondsUnits = false;
+  DMGRData.animUpdateInterval = 150;
+  DMGRData.rotateSecondsInterval = 75;
+  DMGRData.rotateMinutesHoursInterval = 75;
+  DMGRData.doubleDotOnTime = 250;
+  presetMemory.pushDisplayManagerPreset(DMGRData);
+
+  PresetMemory::touchPreset TouchData;
+  TouchData.samples = 100;
+  TouchData.treshold = 40;
+  TouchData.alpha = 8;
+  presetMemory.pushTouchPreset(TouchData);
+
+  PresetMemory::almSoundPreset MelodyData;
+  MelodyData.almMelody = {"1W1V2f2g1u1B2D2E1B1A2c2E3A5X0", 65, false};
+  MelodyData.okSfxMelody = {"1C1E1G1U1X0", 20, true};
+  MelodyData.errSfxMelody = {"2C1X2C1X0", 30, true};
+  presetMemory.pushAlmSoundPreset(MelodyData);
 }

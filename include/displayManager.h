@@ -59,7 +59,7 @@ struct Display {
         bool IsOn(){
             return currentAnimState == STATIC;
         }
-
+        void setup();
         uint8_t digits[6];
 
         //gettery a settery
