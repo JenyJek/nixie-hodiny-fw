@@ -463,17 +463,17 @@ Vzhledem k unikátním rozměrům použitých digitronů a potřebě bezpečně 
 
 <center>obr. 6 - isometrické zobrazení krytu</center>
 
-![obr. 7- explodované zobrazení vnitřní struktury a uspořádání.](Case_explowiew.png|610)
+![obr. 7- explodované zobrazení vnitřní struktury a uspořádání.](readme_imgs/Case_explowiew.png|610)
 
 <center>obr. 7- explodované zobrazení vnitřní struktury a uspořádání.</center>
 
 K návrhu byl použit software OnShape.com. Kryt je řešen jako 6ti dílný - spodní díl (zelený) v sobě ukrývá drážky pro přední krytku (modrá), drážku pro paticemi spojené poloviny jejich držáku (oranžová, červená) a zadní panel (šedá). Mimo tojsou zde instalovány také nožičky s úhlem 5°, vyvýšené výstupky pro usazení PCB a ventilační díra pro DS3231 - aby bylo měření teploty nějak vypovídající a něměřilo teplotu uvnitř krabice. Přední a zadní díly potom ukrývají šestici děr pro šroubky M3, které drží celou krabici dobromady. V zadním díle je potom instalováno tlačítko restartu, DB9 sériový konektor, dírka pro napájecí kabely, výřez pro reproduktorek a pár slotů pro chlazení. Celá krabice je dokončena svrchním dílem (světle modrá), v němž jsou zeslabeny stěny pro pásku dotykového senzoru a místo pro radar. Krabička drží pospolu pomocí dvou šestic šroubů M3, šroubovaných skrz přední a zadní díl zepředu a zezadu do matiček, umístěných do držáků k tomu určených ve spodním a svrchním díle.
 
-![obr. 8 - pohled zepředu](Case_front.png)
+![obr. 8 - pohled zepředu](readme_imgs/Case_front.png)
 
 <center>obr. 8 - pohled zepředu</center>
 
-![obr. 9 - pohled zezadu](Case_back.png)
+![obr. 9 - pohled zezadu](readme_imgs/Case_back.png)
 
 <center>obr. 9 - pohled zezadu</center>
 
