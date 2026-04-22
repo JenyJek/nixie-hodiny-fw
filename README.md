@@ -1,9 +1,8 @@
 <H2>úvodem</H2>
 Jmenuji se Jan Kerber a tohle je moje maturitní práce. Krátce vám představím, proč jsem si vybral zrovna tento projekt:
+
 # 1. Od nápadu k realizaci
-
 ## 1.1 Volba projektu: Proč právě hardware?
-
 V éře, kdy se většina technologického pokroku odehrává v abstraktní rovině softwaru a virtuálních simulací, jsem se rozhodl vydat cestou **hardwarového projektu**. Hlavní motivací byla touha vytvořit něco hmatatelného – zařízení, které propojuje precizní elektroniku, mikrokontroléry a design. Hardware neodpouští chyby a navíc je tu onen reálný prvek světa, který není třeba u softwarového vývoje v dokonalém, simulovaném prostředí brát v potaz, což z něj činí vynikající výzvu.
 ## 1.2 Proč právě hodiny?
 Hodiny naprosto dokonalým projektem pro digitrony. Představují ideální užití zobrazování rovnováhu mezi **užitnou hodnotou** a **technickou komplexností**. Zatímco jejich základní funkce je prostá, dosažení přesnosti, spolehlivého zobrazení a dlouhodobé stability vyžaduje promyšlený přístup k návrhu. Jsou to zařízení, se kterými uživatel interaguje každý den, a narozdíl od dalších zařízení běží klidně i několik let v kuse - je tedy třeba zajistit bezchybnou funkci a brát v potaz přetečení čítačů, což se u krátce běžících zařízení nemusí řešit.
@@ -63,11 +62,13 @@ Hlavním důvodem volby tohoto čipu je jeho nízká cena, široká dostupnost, 
 Návrh zdroje vychází ze základních rovnic pro obvod MC34063 uvedených v datasheetu, dokumentaci výrobce.
 #### 2.1.3.1. Výstupní napětí
 Výstupní napětí $V_{out}$ je určeno poměrem rezistorů $R_1$ and $R_2$ v napěťovém děliči zpětné vazby. Referenční napětí čipu $V_{ref}$ je 1,25 V.
+
 $$V_{out} = 1,25 \cdot \left(1 + \frac{R_2}{R_1}\right)$$
 
 Pro dosažení napětí **170 V** byly zvoleny hodnoty rezistorů $R_1 = 10\,k\Omega$ a $R_2 \approx 1,35\,M\Omega$. Realizováno to je sériovým zapojením obou rezistorů do děliče, doplněným o odrušovací kondenzátor.
 #### 2.1.3.2. Pracovní frekvence
 Pracovní frekvence oscilátoru $f_{osc}$ je určena kapacitou kondenzátoru $C_T$ připojeného k pinu 3. Pro stabilitu a eliminaci slyšitelného pískání byla zvolena frekvence nad hranicí lidského sluchu (typicky 30–50 kHz).
+
 $$C_T = 4 \cdot 10^{-5} \cdot t_{on}$$
 _(Kde $t_{on}$ je doba sepnutí spínače)._
 
@@ -101,10 +102,9 @@ Pro zvolenou pracovní frekvenci kolem **40 kHz** a požadovaný výstupní výk
 #### 2.1.3.5. Schéma
 Po výpočtu a návrhu komponent, jejich naleznutí v tzv. nekonečných kyblících součástek (můj způsob jejich uložení, tj. 30L kýbl, ve kterým jsou naházeny všechny cívky, další kde mám kondenzátory,  další s integrovanými obvody,mosfety a tranzistory) jsem nakreslil toto schéma v KiCad EDA.
 
-![[Schema_34063.png]]
+![obr. 1 - schema HV zdroje](readme_imgs/Schema_34063.png)
+
 <center>obr. 1 - schema HV zdroje</center>
-
-
 
 ### 2.1.4. Účinnost a tepelné ztráty
 Při návrhu byl kladen důraz na minimalizaci tepelných ztrát. Ty vznikají především:
@@ -124,7 +124,10 @@ Srdcem řízení katod jsou dva integrované obvody **MH74141** (vyráběné kdy
 - **Výstup:** 10 výstupů s otevřeným kolektorem, které vydrží napětí nad 100V (zbytkové napětí při neaktivním výboji).
 
 Použití dvou obvodů namísto jednoho umožňuje rozdělit hodiny na tři nezávisle řízené sekce, čímž se zvyšuje **střída (duty cycle)** a tím i jas digitronů. Sekce jsou zapojeny v konfiguraci 1-2-3-1-3-2, aby se zamezilo vizuálnímu klamu, že číslice někam ujíždějí.
-![[Schema_MH74141.png]]<center>obr.2 - low-side HV spínače v čipu MH74141</center>
+
+![obr.2 - low-side HV spínače v čipu MH74141](readme_imgs/Schema_MH74141.png)
+
+<center>obr.2 - low-side HV spínače v čipu MH74141</center>
 
 
 ### 2.2.3. Anodové spínače (High-Side Switching)
@@ -137,8 +140,10 @@ Protože digitron vyžaduje pro zapálení kladné napětí na anodě, je nutné
 
 Toto kaskádní zapojení bezpečně odděluje nízkonapěťovou logiku od vysokého napětí zdroje. Spínače obsluhují dvojice digitronů v kombinaci se dvěma dekodéry MH74141, což vytváří matici 2×3=6 zobrazovaných pozic.
 
-![[Schema_high_HV.png]]
+![obr.3 - High-side HV spínač](readme_imgs/Schema_high_HV.png)
+
 <center>obr.3 - High-side HV spínač</center>
+
 ### 2.2.4. Časování a střída
 Klíčovým parametrem je doba, po kterou je digitron aktivní ($t_{on}$​). Pokud máme 3 fáze multiplexu, střída pro jeden digitron je:
 $$D=31​≈33,3\%$$
@@ -147,8 +152,10 @@ Tento poměr je dostatečný pro dosažení vysokého jasu bez nutnosti přetě�
 ## 2.3. Řídicí mikrokontrolér a softwarový multiplex
 Srdcem celého systému je osmibitový mikrokontrolér **ATmega328P** (architektura AVR). Tento čip byl zvolen pro svou vysokou spolehlivost, dostatečný počet I/O pinů, širokou podporu vývojových nástrojů a hlavně proto, že jsem s ním detailněji pracoval v minulosti. Mikrokontrolér zajišťuje nejen veškerou logiku, ale především precizní časování multiplexního cyklu.
 
-![[Schema_ATMega328P-AU.png]]
+![obr. 4 - zapojení ATMega328P-AU desky a popis registrů PORT](readme_imgs/Schema_ATMega328P-AU.png)
+
 <center>obr. 4 - zapojení ATMega328P-AU desky a popis registrů PORT</center>
+
 ### 2.3.1. Konfigurace časovače Timer1
 Aby mohl multiplex probíhat precizně a deterministicky, byla provedena přímá konfigurace 16bitového časovače **Timer1**. Nastavení probíhá zápisem do kontrolních registrů (TCCR – Timer Counter Control Register) během inicializace systému.
 
@@ -161,6 +168,7 @@ Následně jsou registry `TCCR1A` a `TCCR1B` vynulovány, čímž se časovač u
 Pro účely multiplexu byl zvolen režim **CTC (Clear Timer on Compare Match)**. V tomto režimu čítač neustále počítá směrem nahoru a v momentě, kdy jeho hodnota dosáhne hodnoty uložené v registru `OCR1A`, dojde k vyvolání přerušení a okamžitému vynulování čítače.
 
 Hodnota registru `OCR1A` je vypočtena podle vztahu:
+
 $$OCR1A=\frac{f_{clk\_io}​​}{N⋅f_{target}​}−1$$
 Kde:
 - $f_{clk_io}$​ je frekvence oscilátoru (16MHz).
@@ -170,6 +178,7 @@ Kde:
 Při zvolené hodnotě **249** získáváme frekvenci přerušení:
 
 $$\frac{16000000}{8⋅(249+1)}​=8000Hz$$
+
 #### 2.3.1.3. Tabulka nastavení registrů
 Pro přehlednost jsou použité bity a jejich funkce shrnuty v následující tabulce:
 
@@ -178,6 +187,7 @@ Pro přehlednost jsou použité bity a jejich funkce shrnuty v následující ta
 |**TCCR1B**|`WGM12`|CTC Mode|Časovač se nuluje při shodě s OCR1A.|
 |**TCCR1B**|`CS11`|Prescaler 8|Hodiny procesoru jsou děleny osmi.|
 |**TIMSK1**|`OCIE1A`|Interrupt Enable|Povolení vyvolání ISR při shodě (Compare Match).|
+
 *TCCR = Timer/Counter Control Register, TIMSK = Timer/counter Interrupt MaSK register, WGM**12** = Waveform Generation Mode **1** bit **2**, OCIE1A = Output Compare Interrupt Enable timer **1 A** (trigger volá TIMER**1**_COMP**A**_vect)*
 
 Po dokončení konfigurace jsou globální přerušení opět povolena funkcí `interrupts()`, čímž se spustí samotný proces multiplexního zobrazení na pozadí hlavní smyčky programu.
@@ -271,8 +281,10 @@ V hlavní smyčce programu (`loop`) probíhá pouze výčet aktuálního času z
 ## 2.4. Měření času a modul RTC DS3231
 Aby hodiny plnily svou primární funkci s vysokou přesností, byl do systému integrován modul reálného času **DS3231**. Na rozdíl od vnitřních čítačů mikrokontroléru, které jsou závislé na stabilitě krystalu procesoru a teplotě okolí, disponuje DS3231 vlastní časovou základnou a záložní baterií, což zaručuje uchování času i po odpojení hlavního napájení.
 
-![[Schema_DS3231.png]]
+![obr. 5 - schéma zapojení modulu RTC DS3231](readme_imgs/Schema_DS3231.png)
+
 <center>obr. 5 - schéma zapojení modulu RTC DS3231</center>
+
 ### 2.4.1. Komunikační rozhraní a vlastní knihovnička
 Komunikace mezi kontrolérem ATmega328P a RTC modulem probíhá přes sériovou sběrnici **I2C**  . Pro obsluhu modulu jsem se rozhodl nevyužívat hotové knihovny třetích stran, ale vytvořit **vlastní knihovničku `Rtc`**. Tento přístup umožnil:
 
@@ -395,9 +407,11 @@ prefix je definován v kódu jako `AT`
 | DMU    | display mins/hours update  | nastavení času mezi otočkami minut/hodin                                                   | hodnota v milisekundách, < 250                    | 75               |
 | DOT    | display dot ontime         | nastavení času, po který jsou aktivní tečky \[[^3]]                                        | hodnota v milisekundách, < 800                    | 250              |
 | FRS    | factory reset              | tovární nastavení                                                                          | -                                                 | -                |
+
 **důležité: mimo nastavení času (SCK, SDT, SAL) je třeba hodnoty ukládat příkazem SAV. Pokud se tak nestane, hodnoty se po restartu (ztráta napájení, vypnutí, nebo stisk tlačítka reset) vrátí zpět na původní hodnoty!**
+
 *\[1]: RRRR je formát začínající dvojčíslím 20XX, pokud vložíte hodnotu 19XX, tak jste si úspěšně zablokovali program hodin. Hodně štěstí.*
-*\[2]: trvání je doba mezi jednotlivými notami. formát melodie je následující: <číslo><písmeno>, kdy číslo je trvání noty (násobky trvání), a písmeno je nota (tabulka not je popsána v části program). melodie MUSÍ být ukončena ukončovacím znakem '0'*
+*\[2]: trvání je doba mezi jednotlivými notami. formát melodie je následující:;`<číslo><písmeno>`, kdy číslo je trvání noty (násobky trvání), a písmeno je nota (tabulka not je popsána v části program). melodie MUSÍ být ukončena ukončovacím znakem '0'*
 *\[3]: funkce není v prototypu zapojena*
 
 správný příkaz tedy může vypadat takto: 
@@ -415,6 +429,7 @@ tabulka odpovědí:
 | E2      | interní chyba  | nikdy by se nemělo stát                    |
 | E3      | overflow       | zadaný příkaz je příliš dlouhý (moc mezer) |
 | OK      | provedeno      | příkaz se správně provedl                  |
+
 # 3. výroba
 ## 3.1. tištěný spoj
 Teoretický návrh byl následován fází fyzické realizace, která zahrnovala výrobu desky plošných spojů (PCB), osazování součástek a kritickou fázi oživování vysokonapěťových částí.
@@ -444,12 +459,24 @@ Vzhledem k unikátním rozměrům použitých digitronů a potřebě bezpečně 
 - **Integrace dotykového ovládání:** Klíčovým prvkem konstrukce je tenká stěna v místě dotykového senzoru. Kapacitní senzor popsaný v předchozích kapitolách je umístěn těsně pod povrchem plastu, což umožňuje ovládání hodin pouhým přiložením prstu na vnější stranu krytu. Toto řešení eliminuje potřebu děr a chrání vnitřní elektroniku před prachem a nečistotami.
 - **Bezpečnost a chlazení:** V krytu jsou integrovány větrací otvory, které zajišťují pasivní cirkulaci vzduchu. To je nezbytné pro chlazení výkonové tlumivky a MOSFETu boost měniče, které při dlouhodobém provozu generují zbytkové teplo. Vnitřní sloupky pro uchycení PCB zajišťují pevnou fixaci desky a zároveň definují bezpečnou vzdálenost vysokonapěťových cest od spodní strany krytu.
 
-![[Case_iso.png|534]]<center>obr. 6 - isometrické zobrazení krytu</center>
-![[Case_explowiew.png|610]]<center>obr. 7- explodované zobrazení vnitřní struktury a uspořádání.</center>
+![obr. 6 - isometrické zobrazení krytu](readme_imgs/Case_iso.png|534)
+
+<center>obr. 6 - isometrické zobrazení krytu</center>
+
+![obr. 7- explodované zobrazení vnitřní struktury a uspořádání.](Case_explowiew.png|610)
+
+<center>obr. 7- explodované zobrazení vnitřní struktury a uspořádání.</center>
 
 K návrhu byl použit software OnShape.com. Kryt je řešen jako 6ti dílný - spodní díl (zelený) v sobě ukrývá drážky pro přední krytku (modrá), drážku pro paticemi spojené poloviny jejich držáku (oranžová, červená) a zadní panel (šedá). Mimo tojsou zde instalovány také nožičky s úhlem 5°, vyvýšené výstupky pro usazení PCB a ventilační díra pro DS3231 - aby bylo měření teploty nějak vypovídající a něměřilo teplotu uvnitř krabice. Přední a zadní díly potom ukrývají šestici děr pro šroubky M3, které drží celou krabici dobromady. V zadním díle je potom instalováno tlačítko restartu, DB9 sériový konektor, dírka pro napájecí kabely, výřez pro reproduktorek a pár slotů pro chlazení. Celá krabice je dokončena svrchním dílem (světle modrá), v němž jsou zeslabeny stěny pro pásku dotykového senzoru a místo pro radar. Krabička drží pospolu pomocí dvou šestic šroubů M3, šroubovaných skrz přední a zadní díl zepředu a zezadu do matiček, umístěných do držáků k tomu určených ve spodním a svrchním díle.
-![[Case_front.png]]<center>obr. 8 - pohled zepředu</center>
-![[Case_back.png]]<center>obr. 9 - pohled zezadu</center>
+
+![obr. 8 - pohled zepředu](Case_front.png)
+
+<center>obr. 8 - pohled zepředu</center>
+
+![obr. 9 - pohled zezadu](Case_back.png)
+
+<center>obr. 9 - pohled zezadu</center>
+
 # 4. Závěr
 
 Cílem této práce bylo navrhnout a realizovat plně funkční digitronové hodiny, které spojují estetiku historické techniky s moderními principy embedded systémů. Během realizace se podařilo úspěšně vyřešit problematiku zvyšujícího měniče vysokého napětí, implementovat stabilní multiplexní řízení a vytvořit robustní softwarovou základnu v jazyce C++.
